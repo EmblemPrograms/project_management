@@ -5,7 +5,7 @@ require_once 'config.php';
 require_once 'send_otp.php';
 
 if (!isset($_SESSION['reg_student_id']) || !isset($_SESSION['reg_email'])) {
-    header("Location: index.php");
+    header("Location: register.php");
     exit;
 }
 

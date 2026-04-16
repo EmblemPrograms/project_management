@@ -38,7 +38,7 @@ if (!isset($result['status']) || $result['status'] !== true ||
     !isset($result['data']['status']) || $result['data']['status'] !== 'success') {
     
     ob_end_clean(); // Clear any output
-    die("Payment verification failed. Please contact admin.<br><a href='index.php'>← Back to Registration</a>");
+    die("Payment verification failed. Please contact admin.<br><a href='register.php'>← Back to Registration</a>");
 }
 
 // ====================== GET PENDING REGISTRATION ======================
@@ -46,7 +46,7 @@ $temp_id = $_SESSION['pending_temp_id'] ?? '';
 
 if (empty($temp_id)) {
     ob_end_clean();
-    die("Session expired. Please register again.<br><a href='index.php'>← Back</a>");
+    die("Session expired. Please register again.<br><a href='register.php'>← Back</a>");
 }
 
 $stmt = $pdo->prepare("SELECT * FROM pending_registrations WHERE temp_id = ? AND status = 'pending_payment'");
@@ -55,7 +55,7 @@ $pending = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$pending) {
     ob_end_clean();
-    die("Registration record not found.<br><a href='index.php'>← Back</a>");
+    die("Registration record not found.<br><a href='register.php'>← Back</a>");
 }
 
 // ====================== PROCESS REGISTRATION ======================

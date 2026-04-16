@@ -4,7 +4,7 @@
 require_once 'config.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header("Location: index.php");
+    header("Location: register.php");
     exit;
 }
 
