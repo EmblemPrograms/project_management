@@ -4,6 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 require_once 'config.php';
+require_once 'send_otp.php';
 
 // Security: Only logged-in students with pending submission
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['pending_submission'])) {
@@ -11,34 +12,78 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student' || !isset($_
     exit;
 }
 
-// Fetch student
-$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+// Fetch student record
+$stmt = $pdo->prepare("SELECT * FROM students WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $student = $stmt->fetch();
+
+if (!$student) {
+    header("Location: student_dashboard.php");
+    exit;
+}
 
 $error = '';
 $success = '';
 
+/**
+ * Generate and send OTP using your existing PHPMailer function.
+ * Returns true on success, false on failure.
+ */
+function generate_and_send_otp($pdo, $user_id, $email, $name) {
+    // Cryptographically secure 6-digit OTP
+    $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+    // Store OTP with 30-minute expiry
+    $stmt = $pdo->prepare("INSERT INTO email_verification 
+                          (user_id, otp, expires_at, used) 
+                          VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE), 0)");
+    $stmt->execute([$user_id, $otp]);
+
+    // Dispatch via your PHPMailer function
+    return sendVerificationOTP($email, $otp, $name);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $entered_otp = trim($_POST['otp']);
-
-    // Verify OTP
-    $stmt = $pdo->prepare("SELECT * FROM email_verification 
-                           WHERE user_id = ? AND otp = ? AND expires_at > NOW() AND used = 0");
-    $stmt->execute([$_SESSION['user_id'], $entered_otp]);
-    $record = $stmt->fetch();
-
-    if ($record) {
-        // Mark OTP as used
-        $pdo->prepare("UPDATE email_verification SET used = 1 WHERE id = ?")
-            ->execute([$record['id']]);
-
-        // Now allow file upload - redirect to final upload page
-        $_SESSION['otp_verified'] = true;
-        header("Location: final_project_upload.php");
-        exit;
+    if (isset($_POST['resend_otp'])) {
+        // Resend new OTP
+        $name = $student['name'] ?? $student['fullname'] ?? 'Valued Student';
+        $send_result = generate_and_send_otp($pdo, $_SESSION['user_id'], $student['email'], $name);
+        
+        if ($send_result) {
+            $success = "A new 6-digit OTP has been sent to your registered email address.";
+        } else {
+            $error = "Failed to send OTP. Please verify SMTP configuration in config.php or check error logs.";
+        }
     } else {
-        $error = "Invalid or expired OTP. Please check your email and try again.";
+        // OTP verification
+        $entered_otp = trim($_POST['otp']);
+
+        $stmt = $pdo->prepare("SELECT * FROM email_verification 
+                               WHERE user_id = ? AND otp = ? AND expires_at > NOW() AND used = 0");
+        $stmt->execute([$_SESSION['user_id'], $entered_otp]);
+        $record = $stmt->fetch();
+
+        if ($record) {
+            // Mark OTP as used
+            $pdo->prepare("UPDATE email_verification SET used = 1 WHERE id = ?")
+                 ->execute([$record['id']]);
+
+            $_SESSION['otp_verified'] = true;
+            header("Location: final_project_upload.php");
+            exit;
+        } else {
+            $error = "Invalid or expired OTP. Please check your email (including spam folder) and try again.";
+        }
+    }
+} else {
+    // Initial page load: automatically generate and send OTP
+    $name = $student['name'] ?? $student['fullname'] ?? 'Valued Student';
+    $send_result = generate_and_send_otp($pdo, $_SESSION['user_id'], $student['email'], $name);
+    
+    if ($send_result) {
+        $success = "A 6-digit OTP has been sent to your registered email address. Please check your inbox (and spam folder).";
+    } else {
+        $error = "Failed to send the OTP email. Please verify SMTP credentials in config.php and ensure the Gmail App Password is correct.";
     }
 }
 ?>
@@ -64,11 +109,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="card-body p-5 text-center">
             <p class="mb-4">
                 A 6-digit OTP has been sent to:<br>
-                <strong><?php echo htmlspecialchars($student['email']); ?></strong>
+                <strong><?= safe_output($student['email']) ?></strong>
             </p>
 
+            <?php if ($success): ?>
+                <div class="alert alert-success"><?= safe_output($success) ?></div>
+            <?php endif; ?>
+
             <?php if ($error): ?>
-                <div class="alert alert-danger"><?php echo $error; ?></div>
+                <div class="alert alert-danger"><?= safe_output($error) ?></div>
             <?php endif; ?>
 
             <form method="POST">
@@ -81,8 +130,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button type="submit" class="btn btn-success btn-lg w-100">Verify OTP</button>
             </form>
 
+            <div class="mt-3">
+                <form method="POST">
+                    <button type="submit" name="resend_otp" class="btn btn-outline-secondary btn-sm w-100">
+                        Resend OTP
+                    </button>
+                </form>
+            </div>
+
             <small class="text-muted d-block mt-4">
-                OTP expires in 30 minutes. Didn't receive it? Check your spam folder.
+                OTP expires in 30 minutes. Didn't receive it? Check your spam folder or use the resend option above.
             </small>
         </div>
     </div>

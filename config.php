@@ -3,7 +3,9 @@
 
 session_start();
 date_default_timezone_set('Africa/Lagos');
-
+// Add this for better debugging
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 // ===================== DATABASE CONFIGURATION =====================
 $host = 'localhost';
 $db   = 'project_repo';
@@ -24,6 +26,9 @@ try {
 } catch (PDOException $e) {
     die("Database Connection Failed: " . $e->getMessage());
 }
+
+// ====================== PAYSTACK CONFIG ======================
+define('PAYSTACK_SECRET_KEY', 'sk_test_f73e9c6d028563c8c728bef172c1e7359b4a1ef8');
 
 // ===================== UPLOAD DIRECTORIES =====================
 define('UPLOAD_PASSPORT_DIR', 'uploads/passports/');
