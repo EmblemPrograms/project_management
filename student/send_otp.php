@@ -4,7 +4,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once 'vendor/autoload.php';   // If using Composer
+require_once '../vendor/autoload.php';   // If using Composer
 
 function sendVerificationOTP($email, $otp, $name) {
     $mail = new PHPMailer(true);

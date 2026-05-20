@@ -1,10 +1,10 @@
 <?php
 // department_admin_dashboard.php
 
-require_once 'config.php';
+require_once '../includes/config.php';
 
 if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] !== 'department_admin') {
-    header("Location: grand_admin_login.php");
+    header("Location: ../admin/");
     exit;
 }
 
@@ -29,6 +29,7 @@ $total_students = $dept['total_students'] ?? 0;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Department Admin Dashboard</title>
+    <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
@@ -40,7 +41,7 @@ $total_students = $dept['total_students'] ?? 0;
     <div class="card shadow">
         <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
             <h4><?= htmlspecialchars($department_name) ?> - Admin Dashboard</h4>
-            <a href="logout.php" class="btn btn-outline-light btn-sm">Logout</a>
+            <a href="../logout.php" class="btn btn-outline-light btn-sm">Logout</a>
         </div>
         <div class="card-body">
 
@@ -56,7 +57,7 @@ $total_students = $dept['total_students'] ?? 0;
 
             <div class="row g-4">
                 <div class="col-md-6">
-                    <a href="dept_admin_view_students.php" class="text-decoration-none">
+                    <a href="view_students.php" class="text-decoration-none">
                         <div class="card text-center h-100 shadow-sm">
                             <div class="card-body py-4">
                                 <h5>👨‍🎓 View All Students</h5>
@@ -67,7 +68,7 @@ $total_students = $dept['total_students'] ?? 0;
                 </div>
 
                 <div class="col-md-6">
-                    <a href="dept_admin_view_projects.php" class="text-decoration-none">
+                    <a href="view_projects.php" class="text-decoration-none">
                         <div class="card text-center h-100 shadow-sm">
                             <div class="card-body py-4">
                                 <h5>📂 View Projects</h5>

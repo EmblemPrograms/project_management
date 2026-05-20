@@ -1,8 +1,8 @@
 <?php
-require_once 'config.php';
+require_once '../includes/config.php';
 
 if (isset($_SESSION['user_id'])) {
-    header("Location: student_dashboard.php");
+    header("Location: dashboard.php");
     exit;
 }
 
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        header("Location: student_dashboard.php");
+        header("Location: dashboard.php");
         exit;
     }
 } else {
@@ -74,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NACOS FPE CHAPTER - Login</title>
+    <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -140,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- ADMIN LOGIN BUTTON -->
             <div class="text-center mt-4 pt-3 border-top">
-                <a href="admin_login.php" class="btn btn-outline-dark btn-lg w-100">
+                <a href="../admin/" class="btn btn-outline-dark btn-lg w-100">
                     🔑 Login as Admin
                 </a>
             </div>

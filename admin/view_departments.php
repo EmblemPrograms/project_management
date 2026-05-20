@@ -1,10 +1,10 @@
 <?php
 // grand_admin_view_departments.php
 
-require_once 'config.php';
+require_once '../includes/config.php';
 
 if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] !== 'grand_admin') {
-    header("Location: grand_admin_login.php");
+    header("Location: index.php");
     exit;
 }
 
@@ -26,6 +26,7 @@ $departments = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <title>View Departments - Grand Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -63,7 +64,7 @@ $departments = $stmt->fetchAll();
                                     <span class="badge bg-success fs-6"><?= $dept['total_students'] ?></span>
                                 </td>
                                 <td class="text-center">
-                                    <a href="grand_admin_view_students.php?department_id=<?= $dept['id'] ?>" 
+                                    <a href="view_students.php?department_id=<?= $dept['id'] ?>" 
                                        class="btn btn-sm btn-success">
                                         View Students
                                     </a>

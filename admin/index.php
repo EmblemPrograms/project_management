@@ -1,7 +1,7 @@
 <?php
 // admin_login.php
 
-require_once 'config.php';
+require_once '../includes/config.php';
 
 $error = '';
 
@@ -29,9 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Redirect based on role
             if ($admin['role'] === 'grand_admin') {
-                header("Location: grand_admin_dashboard.php");
+                header("Location: dashboard.php");
             } else {
-                header("Location: department_admin_dashboard.php");
+                header("Location: ../department/dashboard.php");
             }
             exit;
 
@@ -48,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - NACOS FPE</title>
+    <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {

@@ -1,9 +1,9 @@
 <?php
 // dept_admin_view_students.php
-require_once 'config.php';
+require_once '../includes/config.php';
 
 if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] !== 'department_admin') {
-    header("Location: grand_admin_login.php");
+    header("Location: ../admin/");
     exit;
 }
 
@@ -48,6 +48,7 @@ $students = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View All Students - Department Admin</title>
+    <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -56,7 +57,7 @@ $students = $stmt->fetchAll();
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3>All Students in <?= htmlspecialchars($_SESSION['department_name'] ?? 'Your Department') ?></h3>
-        <a href="department_admin_dashboard.php" class="btn btn-secondary">← Back to Dashboard</a>
+        <a href="dashboard.php" class="btn btn-secondary">← Back to Dashboard</a>
     </div>
 
     <!-- Filter Form -->
@@ -79,7 +80,7 @@ $students = $stmt->fetchAll();
                     <button type="submit" class="btn btn-success w-100">Apply Filter</button>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <a href="dept_admin_view_students.php" class="btn btn-secondary w-100">Reset</a>
+                    <a href="view_students.php" class="btn btn-secondary w-100">Reset</a>
                 </div>
             </form>
         </div>

@@ -1,16 +1,16 @@
 <?php
 // grand_admin_dashboard.php
 
-require_once 'config.php';
+require_once '../includes/config.php';
 
 // PHPMailer (install via composer: composer require phpmailer/phpmailer)
-require_once 'vendor/autoload.php';
+require_once '../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] !== 'grand_admin') {
-    header("Location: grand_admin_login.php");
+    header("Location: index.php");
     exit;
 }
 
@@ -131,7 +131,8 @@ $projects = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grand Admin Dashboard - NACOS FPE</title>
+    <title>Admin Dashboard - NACOS FPE</title>
+    <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -147,7 +148,7 @@ $projects = $stmt->fetchAll();
         }
 
         .card-header {
-            background-color: #2563eb !important;
+            background-color: #0bd83b !important;
         }
     </style>
 </head>
@@ -157,8 +158,8 @@ $projects = $stmt->fetchAll();
 
         <div class="card shadow">
             <div class="card-header text-white d-flex justify-content-between">
-                <h4>Grand Admin Dashboard</h4>
-                <a href="logout.php" class="btn btn-outline-light btn-sm">Logout</a>
+                <h4>Admin Dashboard</h4>
+                <a href="../logout.php" class="btn btn-outline-light btn-sm">Logout</a>
             </div>
 
             <div class="card-body">
@@ -203,7 +204,7 @@ $projects = $stmt->fetchAll();
                 <!-- Your existing Quick Action Cards -->
                 <div class="row g-4 mb-4">
                     <div class="col-md-4">
-                        <a href="grand_admin_create_department.php" class="text-decoration-none">
+                        <a href="create_department.php" class="text-decoration-none">
                             <div class="card text-center h-100 shadow-sm">
                                 <div class="card-body">
                                     <h5>➕ Create New Department</h5>
@@ -212,7 +213,7 @@ $projects = $stmt->fetchAll();
                         </a>
                     </div>
                     <div class="col-md-4">
-                        <a href="grand_admin_create_dept_admin.php" class="text-decoration-none">
+                        <a href="department_admin.php" class="text-decoration-none">
                             <div class="card text-center h-100 shadow-sm">
                                 <div class="card-body">
                                     <h5>👤 Create Department Admin</h5>
@@ -221,7 +222,7 @@ $projects = $stmt->fetchAll();
                         </a>
                     </div>
                     <div class="col-md-4">
-                        <a href="grand_admin_view_departments.php" class="text-decoration-none">
+                        <a href="view_departments.php" class="text-decoration-none">
                             <div class="card text-center h-100 shadow-sm">
                                 <div class="card-body">
                                     <h5>📋 View All Departments</h5>
@@ -238,7 +239,7 @@ $projects = $stmt->fetchAll();
                     <form method="GET" class="row g-3">
                         <!-- Your filter fields here - unchanged -->
                         <div class="col-md-3">
-                            <label class="form-label">Search (Matric No / Topic / Student)</label>
+                            <label class="form-label">(Matric No / Topic / Student)</label>
                             <input type="text" name="search" class="form-control"
                                 value="<?= htmlspecialchars($search) ?>" placeholder="Search...">
                         </div>

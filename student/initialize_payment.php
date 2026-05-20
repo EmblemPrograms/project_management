@@ -1,6 +1,6 @@
 <?php
 if (!isset($_SESSION)) ;
-require_once 'config.php';
+require_once '../includes/config.php';
 
 $temp_id = $_GET['temp_id'] ?? '';
 

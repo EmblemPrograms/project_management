@@ -7,8 +7,8 @@ if (!isset($_SESSION)) {
 // Start output buffering to prevent "headers already sent" issues
 ob_start();
 
-require_once 'config.php'; 
-require_once 'db.php';   // Make sure this has $pdo and PAYSTACK_SECRET_KEY
+require_once '../includes/config.php'; 
+require_once '../includes/db.php';   // Make sure this has $pdo and PAYSTACK_SECRET_KEY
 require_once 'send_otp.php';
 
 $reference = $_GET['reference'] ?? '';

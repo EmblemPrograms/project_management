@@ -1,7 +1,7 @@
 <?php
 // otp_verification.php
 
-require_once 'config.php';
+require_once '../includes/config.php';
 require_once 'send_otp.php';
 
 if (!isset($_SESSION['reg_student_id']) || !isset($_SESSION['reg_email'])) {
@@ -62,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['resend_otp'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTP Verification - NACOS FPE</title>
+    <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { 

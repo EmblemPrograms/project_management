@@ -1,7 +1,7 @@
 <?php
 // index.php - Homepage
 
-require_once 'config.php';
+require_once 'includes/config.php';
 ?>
 
 <!DOCTYPE html>
@@ -12,6 +12,7 @@ require_once 'config.php';
     <title>NACOS FPE CHAPTER | Project Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <style>
         :root {
             --primary: #b6ff11;
@@ -208,7 +209,7 @@ require_once 'config.php';
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
                 <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-                <li class="nav-item"><a class="nav-link btn btn-success text-white px-4 ms-3" href="login.php">Login</a></li>
+                <li class="nav-item"><a class="nav-link btn btn-success text-white px-4 ms-3" href="student/">Login</a></li>
             </ul>
         </div>
     </div>
@@ -227,7 +228,7 @@ require_once 'config.php';
                     A polished platform for students, supervisors and department admins to upload, review, approve and track project progress in one place.
                 </p>
                 <div class="d-flex flex-column flex-sm-row gap-3 mb-4">
-                    <a href="login.php" class="btn btn-nacos btn-lg">Get Started</a>
+                    <a href="student/" class="btn btn-nacos btn-lg">Get Started</a>
                     <a href="#features" class="btn btn-outline-light btn-lg">Explore features</a>
                 </div>
             </div>
@@ -245,7 +246,7 @@ require_once 'config.php';
                         <li class="mb-3"><i class="fas fa-check-circle me-2 text-success"></i> Track approval status in real time</li>
                         <li class="mb-3"><i class="fas fa-check-circle me-2 text-success"></i> Receive email and OTP confirmations</li>
                     </ul>
-                    <a href="login.php" class="btn btn-light btn-sm fw-semibold">Open dashboard</a>
+                    <a href="student/" class="btn btn-light btn-sm fw-semibold">Open dashboard</a>
                 </div>
             </div>
         </div>

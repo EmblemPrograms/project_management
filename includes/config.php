@@ -40,9 +40,9 @@ if (!is_dir(UPLOAD_PROJECT_DIR))  mkdir(UPLOAD_PROJECT_DIR, 0755, true);
 // ===================== PHPMailer Settings =====================
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587);
-define('SMTP_USERNAME', 'fawwasolajide@gmail.com');
-define('SMTP_PASSWORD', 'rytfhbmvckmaetlw');     // Keep your real App Password here
-define('SMTP_FROM_EMAIL', 'fawwasolajide@gmail.com');
+define('SMTP_USERNAME', 'nacosfpeadmin@gmail.com');
+define('SMTP_PASSWORD', 'racjnvatmibbtxjo');     // Keep your real App Password here
+define('SMTP_FROM_EMAIL', 'nacosfpeadmin@gmail.com');
 define('SMTP_FROM_NAME', 'NACOS FPE CHAPTER');
 
 // System Constants

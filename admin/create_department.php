@@ -1,10 +1,10 @@
 <?php
 // grand_admin_create_department.php
 
-require_once 'config.php';
+require_once '../includes/config.php';
 
 if (!isset($_SESSION['admin_role']) || $_SESSION['admin_role'] !== 'grand_admin') {
-    header("Location: grand_admin_login.php");
+    header("Location: index.php");
     exit;
 }
 
@@ -34,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Create Department</title>
+    <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">

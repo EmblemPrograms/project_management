@@ -2,7 +2,7 @@
 // send_project_otp.php
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['pending_submission'])) {
-    header("Location: student_dashboard.php");
+    header("Location: dashboard.php");
     exit;
 }
 
@@ -16,7 +16,7 @@ $stmt = $pdo->prepare("INSERT INTO email_verification (user_id, otp, expires_at)
 $stmt->execute([$_SESSION['user_id'], $otp, $expires_at]);
 
 // ==================== SEND EMAIL WITH PHPMailer ====================
-require_once 'vendor/autoload.php';
+require_once '../vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -24,23 +24,23 @@ $mail = new PHPMailer(true);
 
 try {
     $mail->isSMTP();
-    $mail->Host       = 'smtp.gmail.com';
-    $mail->SMTPAuth   = true;
-    $mail->Username   = 'your_gmail@gmail.com';           // ← CHANGE THIS
-    $mail->Password   = 'your_16_digit_app_password';     // ← CHANGE THIS (App Password)
+    $mail->Host = SMTP_HOST;
+    $mail->SMTPAuth = true;
+    $mail->Username = SMTP_USERNAME;
+    $mail->Password = SMTP_PASSWORD;
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port       = 587;
+    $mail->Port = SMTP_PORT;
 
     // For debugging (set to 0 when everything works)
-    $mail->SMTPDebug  = 2;
+    $mail->SMTPDebug = 2;
     $mail->Debugoutput = 'html';
 
-    $mail->setFrom('your_gmail@gmail.com', 'NACOS FPE Chapter');
+    $mail->setFrom(SMTP_USERNAME, 'NACOS FPE Chapter');
     $mail->addAddress($student['email']);
 
     $mail->isHTML(true);
     $mail->Subject = 'Your Project Upload OTP';
-    $mail->Body    = "
+    $mail->Body = "
         <h3>Project Submission OTP</h3>
         <p>Your One-Time Password is:</p>
         <h2 style='color:#28a745; letter-spacing:8px;'>{$otp}</h2>

@@ -5,7 +5,7 @@ if (!isset($_SESSION)) {
 }
 
 // ====================== LOAD CONFIG & OTP FUNCTION ======================
-require_once 'config.php';
+require_once '../includes/config.php';
 require_once 'send_otp.php';
 
 $message = "";
@@ -196,6 +196,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NACOS FPE - Student Registration & Login</title>
+    <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -292,7 +293,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </form>
                                 <div class="text-center ">
                                 <p>Already Have An Account? 
-                    <a href="login.php" class="text-success fw-bold">Login here</a>
+                    <a href="index.php" class="text-success fw-bold">Login here</a>
                 </p></div>
                             </div>
                         </div>
@@ -381,7 +382,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                              <div class="text-center ">
                                 <p>Already Have An Account? 
-                    <a href="login.php" class="text-success fw-bold">Login here</a>
+                    <a href="index.php" class="text-success fw-bold">Login here</a>
                 </p></div>
                                 </form>
                             </div>
