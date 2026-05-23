@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" name="code" class="form-control text-uppercase" maxlength="10" required>
                 </div>
                 <button type="submit" class="btn btn-success">Create Department</button>
-                <a href="grand_admin_dashboard.php" class="btn btn-secondary">Back</a>
+                <a href="dashboard.php" class="btn btn-secondary">Back</a>
             </form>
         </div>
     </div>

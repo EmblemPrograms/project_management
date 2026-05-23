@@ -37,7 +37,7 @@ $departments = $stmt->fetchAll();
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3>All Departments</h3>
-        <a href="grand_admin_dashboard.php" class="btn btn-secondary">← Back to Dashboard</a>
+        <a href="dashboard.php" class="btn btn-secondary">← Back to Dashboard</a>
     </div>
 
     <div class="card shadow">

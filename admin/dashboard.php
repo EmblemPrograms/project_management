@@ -173,7 +173,7 @@ $projects = $stmt->fetchAll();
                 <?php endif; ?>
 
                 <!-- Submission Dates & Notification Form -->
-                <div class="card mb-4 border-primary">
+                <!-- <div class="card mb-4 border-primary">
                     <div class="card-header bg-primary text-white">
                         <h5><i class="fas fa-calendar-alt"></i> Project Submission Period & Notification</h5>
                     </div>
@@ -199,7 +199,7 @@ $projects = $stmt->fetchAll();
                             This will save the dates and immediately email every registered student.
                         </small>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Your existing Quick Action Cards -->
                 <div class="row g-4 mb-4">

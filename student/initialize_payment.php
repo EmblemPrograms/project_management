@@ -8,13 +8,14 @@ if (empty($temp_id) || !isset($_SESSION['pending_temp_id']) || $_SESSION['pendin
     die("Invalid session. Please start registration again.");
 }
 
-$stmt = $pdo->prepare("SELECT email, amount, level FROM pending_registrations WHERE temp_id = ? AND status = 'pending_payment'");
+$stmt = $pdo->prepare("SELECT email, name, amount, level FROM pending_registrations WHERE temp_id = ? AND status = 'pending_payment'");
 $stmt->execute([$temp_id]);
 $pending = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$pending) die("Registration not found.");
 
 $email  = $pending['email'];
+$name   = $pending['name'];
 $amount = (int) ($pending['amount'] * 100);
 
 $reference = "NACOS_" . strtoupper($pending['level']) . "_" . time() . rand(10000,99999);
@@ -26,6 +27,7 @@ curl_setopt_array($curl, [
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => json_encode([
         'email' => $email,
+        'name' => $name,
         'amount' => $amount,
         'reference' => $reference,
         'callback_url' => "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . "/process_payment.php"

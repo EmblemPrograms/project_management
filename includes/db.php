@@ -2,9 +2,9 @@
 // db.php - Simple database connection (if you prefer to use separately)
 
 $host = 'localhost';
-$db   = 'project_repo';
-$user = 'root';
-$pass = '';
+$db   = 'school37_project_repo';
+$user = 'school37';
+$pass = 'x6z4U;0ZPuB5e:';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);

@@ -1,6 +1,16 @@
 <?php
 // send_otp.php - Email OTP Sender using PHPMailer
 
+
+// Generate 6-digit OTP
+$otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+$expires_at = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+
+// Save OTP to database - Removed 'created_at' column
+$stmt = $pdo->prepare("INSERT INTO email_verification (user_id, otp, expires_at) 
+                       VALUES (?, ?, ?)");
+$stmt->execute([$_SESSION['user_id'], $otp, $expires_at]);
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 

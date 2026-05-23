@@ -13,42 +13,41 @@ $message = "";
 // ====================== PASSPORT UPLOAD FUNCTION ======================
 function uploadPassport($fileKey) {
     global $errors;
-    $target_dir = UPLOAD_PASSPORT_DIR;
-    if (!is_dir($target_dir)) {
-        mkdir($target_dir, 0755, true);
-    }
-
-    if (!isset($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] !== UPLOAD_ERR_OK) {
+    
+    if (!isset($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] !== 0) {
         $errors[] = "Passport photo is required.";
         return false;
     }
 
     $file = $_FILES[$fileKey];
-    $check = getimagesize($file['tmp_name']);
-    if ($check === false) {
-        $errors[] = "Invalid image file.";
-        return false;
-    }
-
+    $allowed = ['jpg', 'jpeg', 'png'];
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    if (!in_array($ext, ['jpg', 'jpeg', 'png'])) {
-        $errors[] = "Only JPG, JPEG and PNG passport photos allowed.";
+
+    if (!in_array($ext, $allowed)) {
+        $errors[] = "Only JPG, JPEG & PNG files are allowed for passport.";
         return false;
     }
 
-    if ($file['size'] > 2 * 1024 * 1024) {
-        $errors[] = "Passport photo must not exceed 2MB.";
+    if ($file['size'] > 5 * 1024 * 1024) { // 5MB limit
+        $errors[] = "Passport photo must be less than 5MB.";
         return false;
     }
 
-    $new_name = "pass_" . time() . "_" . rand(10000, 99999) . "." . $ext;
-    $target_file = $target_dir . $new_name;
+    $new_filename = "pass_" . uniqid() . "." . $ext;
+    $upload_dir = "uploads/passports/";
+    $upload_path = $upload_dir . $new_filename;
 
-    if (move_uploaded_file($file['tmp_name'], $target_file)) {
-        return $target_file;
+    // Create directory if it doesn't exist
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0777, true);
     }
-    $errors[] = "Failed to upload passport.";
-    return false;
+
+    if (move_uploaded_file($file['tmp_name'], $upload_path)) {
+        return $new_filename;   // Return only filename (recommended for DB storage)
+    } else {
+        $errors[] = "Failed to upload passport photo.";
+        return false;
+    }
 }
 
 // ====================== HANDLE FORM SUBMISSION ======================
@@ -250,7 +249,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Session <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="session" value="<?= htmlspecialchars(DEFAULT_SESSION ?? '2024/2025') ?>" required>
+                                            <select class="form-control" name="session" required>
+    <option value="">-- Select Academic Session --</option>
+    <option value="2023/2024" <?= (DEFAULT_SESSION ?? '2024/2025') === '2023/2024' ? 'selected' : '' ?>>2023/2024</option>
+    <option value="2024/2025" <?= (DEFAULT_SESSION ?? '2024/2025') === '2024/2025' ? 'selected' : '' ?>>2024/2025</option>
+    <option value="2025/2026" <?= (DEFAULT_SESSION ?? '2024/2025') === '2025/2026' ? 'selected' : '' ?>>2025/2026</option>
+    <!--<option value="2026/2027" <?= (DEFAULT_SESSION ?? '2024/2025') === '2026/2027' ? 'selected' : '' ?>>2026/2027</option>-->
+    <!--<option value="2027/2028" <?= (DEFAULT_SESSION ?? '2024/2025') === '2027/2028' ? 'selected' : '' ?>>2027/2028</option>-->
+</select>
                                         </div>
                                     </div>
 
@@ -333,7 +339,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <div class="row mb-4">
                                         <div class="col-md-12">
                                             <label class="form-label fw-bold">Session <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="session" value="<?= htmlspecialchars(DEFAULT_SESSION ?? '2024/2025') ?>" required>
+                                            <select class="form-control" name="session" required>
+    <option value="">-- Select Academic Session --</option>
+    <option value="2023/2024" <?= (DEFAULT_SESSION ?? '2024/2025') === '2023/2024' ? 'selected' : '' ?>>2023/2024</option>
+    <option value="2024/2025" <?= (DEFAULT_SESSION ?? '2024/2025') === '2024/2025' ? 'selected' : '' ?>>2024/2025</option>
+    <option value="2025/2026" <?= (DEFAULT_SESSION ?? '2024/2025') === '2025/2026' ? 'selected' : '' ?>>2025/2026</option>
+    <!--<option value="2026/2027" <?= (DEFAULT_SESSION ?? '2024/2025') === '2026/2027' ? 'selected' : '' ?>>2026/2027</option>-->
+    <!--<option value="2027/2028" <?= (DEFAULT_SESSION ?? '2024/2025') === '2027/2028' ? 'selected' : '' ?>>2027/2028</option>-->
+</select>
                                         </div>
                                     </div>
 
