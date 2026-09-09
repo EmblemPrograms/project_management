@@ -143,7 +143,7 @@ $projects = $stmt->fetchAll();
                                    <td>
     <?php if ($row['status'] == 'pending'): ?>
         <!-- View Document Button -->
-        <a href="<?= htmlspecialchars($row['file_path']) ?>" 
+        <a href="<?= htmlspecialchars(project_url($row['file_path'])) ?>" 
            class="btn btn-info btn-sm me-1" target="_blank">
             <i class="fas fa-eye"></i> View PDF
         </a>
@@ -156,7 +156,7 @@ $projects = $stmt->fetchAll();
            class="btn btn-danger btn-sm"
            onclick="return confirm('Reject this project?')">Reject</a>
     <?php elseif ($row['status'] == 'approved'): ?>
-        <a href="<?= htmlspecialchars($row['file_path']) ?>" 
+        <a href="<?= htmlspecialchars(project_url($row['file_path'])) ?>" 
            class="btn btn-success btn-sm" download>
             <i class="fas fa-download"></i> Download
         </a>

@@ -32,6 +32,7 @@ $projects = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard - NACOS FPE Chapter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <style>
@@ -77,7 +78,7 @@ $projects = $stmt->fetchAll();
             <!-- Passport -->
             <div class="text-center">
                 <?php if (!empty($student['passport'])): ?>
-                    <img src="uploads/passports/<?= htmlspecialchars($student['passport']) ?>" 
+                    <img src="<?= htmlspecialchars(passport_url($student['passport'])) ?>" 
                          class="passport-img" 
                          alt="Passport"
                          onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=No+Photo';">
@@ -178,7 +179,7 @@ $projects = $stmt->fetchAll();
             $confirmationBtn = '';
 
             if ($row['status'] === 'approved') {
-                $downloadBtn = "<a href='{$row['file_path']}' class='btn btn-primary btn-sm me-2' download>
+                $downloadBtn = "<a href='" . htmlspecialchars(project_url($row['file_path'])) . "' class='btn btn-primary btn-sm me-2' download>
                                     <i class='bi bi-download'></i> Download File
                                 </a>";
 

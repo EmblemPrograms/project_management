@@ -107,6 +107,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="card-body p-4">
             <h4 class="text-center mb-4 text-success">Student Login</h4>
 
+            <?php if (!empty($_SESSION['success'])): ?>
+                <div class="alert alert-success"><?php echo htmlspecialchars($_SESSION['success']); ?></div>
+                <?php unset($_SESSION['success']); ?>
+            <?php endif; ?>
+
             <?php if ($error): ?>
                 <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
@@ -147,5 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<?php require __DIR__ . '/../includes/password_toggle.php'; ?>
 </body>
 </html>

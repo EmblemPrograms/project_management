@@ -12,16 +12,20 @@ $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name']);
-    $code = strtoupper(trim($_POST['code']));
+    $name  = trim($_POST['name']);
+    $code  = strtoupper(trim($_POST['code']));
+    $level = $_POST['level'] ?? '';
 
-    if (empty($name) || empty($code)) {
+    if (empty($name) || empty($code) || empty($level)) {
         $error = "All fields are required.";
+    } elseif (!in_array($level, ['ND', 'HND'], true)) {
+        // The select only offers these two; anything else is a tampered post.
+        $error = "Please choose a valid level.";
     } else {
         try {
-            $stmt = $pdo->prepare("INSERT INTO departments (name, code) VALUES (?, ?)");
-            $stmt->execute([$name, $code]);
-            $success = "Department '$name' created successfully!";
+            $stmt = $pdo->prepare("INSERT INTO departments (name, code, level) VALUES (?, ?, ?)");
+            $stmt->execute([$name, $code, $level]);
+            $success = "$level department '$name' created successfully!";
         } catch (Exception $e) {
             $error = "Department code already exists or error occurred.";
         }
@@ -55,6 +59,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label>Department Code (e.g. CSC, MTH)</label>
                     <input type="text" name="code" class="form-control text-uppercase" maxlength="10" required>
+                </div>
+                <div class="mb-3">
+                    <label>Level</label>
+                    <select name="level" class="form-select" required>
+                        <option value="">-- Select Level --</option>
+                        <option value="ND">ND</option>
+                        <option value="HND">HND</option>
+                    </select>
+                    <div class="form-text">
+                        Students only see this department on the registration tab for
+                        the level chosen here.
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-success">Create Department</button>
                 <a href="dashboard.php" class="btn btn-secondary">Back</a>

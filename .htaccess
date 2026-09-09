@@ -1,0 +1,20 @@
+RewriteEngine On
+
+# Force HTTPS in production. Localhost is excluded: WAMP serves plain HTTP on
+# port 80 with no SSL vhost, so without this the redirect makes every local
+# page unreachable. Production hostnames are unaffected.
+RewriteCond %{HTTP_HOST} !^localhost [NC]
+RewriteCond %{HTTP_HOST} !^127\.0\.0\.1
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Never serve database dumps, PHP error logs, dotfiles or VCS metadata.
+# All of these were downloadable before: the dump carries admin password
+# hashes, and error_log leaks absolute server paths.
+<FilesMatch "(?i)\.(sql|sql\.gz|zip|tar|gz|bak|old|ini|log|md|json|lock)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "(?i)^(error_log|\.env|\.htaccess|\.htpasswd|\.gitignore)$">
+    Require all denied
+</FilesMatch>
+RedirectMatch 404 /\.git

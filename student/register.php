@@ -1,53 +1,133 @@
 <?php
-// ====================== SAFE SESSION START ======================
-if (!isset($_SESSION)) {
-    
-}
-
 // ====================== LOAD CONFIG & OTP FUNCTION ======================
+// config.php starts the session (guarded) and builds $pdo.
 require_once '../includes/config.php';
 require_once 'send_otp.php';
 
 $message = "";
+$errors  = [];
+
+// Fees live here, in one place. process_payment.php compares the amount Paystack
+// actually collected against pending_registrations.amount, so the button label
+// and the stored amount must never drift apart.
+const FEE_HND = 2000.00;
+const FEE_ND  = 4000.00;
+
+// Sessions a student may pick. The POSTed value is validated against this list
+// so a crafted request can't store an arbitrary string.
+$allowed_sessions = ['2023/2024', '2024/2025', '2025/2026'];
+
+/** Render the session <option> list, defaulting to DEFAULT_SESSION. */
+function session_options(array $allowed): string {
+    $html = '<option value="">-- Select Academic Session --</option>';
+    foreach ($allowed as $s) {
+        $sel   = ($s === DEFAULT_SESSION) ? ' selected' : '';
+        $esc   = htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+        $html .= "<option value=\"{$esc}\"{$sel}>{$esc}</option>";
+    }
+    return $html;
+}
 
 // ====================== PASSPORT UPLOAD FUNCTION ======================
-function uploadPassport($fileKey) {
+function uploadPassport($fileKey, $label = 'Passport photo') {
     global $errors;
-    
-    if (!isset($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] !== 0) {
-        $errors[] = "Passport photo is required.";
+
+    if (!isset($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] !== UPLOAD_ERR_OK) {
+        $errors[] = "$label is required.";
         return false;
     }
 
-    $file = $_FILES[$fileKey];
+    $file    = $_FILES[$fileKey];
     $allowed = ['jpg', 'jpeg', 'png'];
-    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $ext     = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-    if (!in_array($ext, $allowed)) {
-        $errors[] = "Only JPG, JPEG & PNG files are allowed for passport.";
+    if (!in_array($ext, $allowed, true)) {
+        $errors[] = "$label must be a JPG, JPEG or PNG file.";
         return false;
     }
 
     if ($file['size'] > 5 * 1024 * 1024) { // 5MB limit
-        $errors[] = "Passport photo must be less than 5MB.";
+        $errors[] = "$label must be less than 5MB.";
         return false;
     }
 
-    $new_filename = "pass_" . uniqid() . "." . $ext;
-    $upload_dir = "uploads/passports/";
-    $upload_path = $upload_dir . $new_filename;
+    // Check the file really is an image, not just something named .jpg.
+    $info = @getimagesize($file['tmp_name']);
+    if ($info === false || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) {
+        $errors[] = "$label is not a valid image file.";
+        return false;
+    }
 
-    // Create directory if it doesn't exist
+    $new_filename = "pass_" . uniqid('', true) . "." . $ext;
+    $upload_dir   = UPLOAD_PASSPORT_DIR;   // absolute; see includes/config.php
+    $upload_path  = $upload_dir . $new_filename;
+
     if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
+        mkdir($upload_dir, 0755, true);
     }
 
     if (move_uploaded_file($file['tmp_name'], $upload_path)) {
-        return $new_filename;   // Return only filename (recommended for DB storage)
-    } else {
-        $errors[] = "Failed to upload passport photo.";
-        return false;
+        return $new_filename;   // filename only — views resolve it via passport_url()
     }
+
+    $errors[] = "Failed to upload $label.";
+    return false;
+}
+
+/** Remove an already-uploaded passport when a later step in the same form fails. */
+function discardPassport($filename) {
+    if ($filename && is_file(UPLOAD_PASSPORT_DIR . $filename)) {
+        @unlink(UPLOAD_PASSPORT_DIR . $filename);
+    }
+}
+
+/**
+ * A matric number that is already sitting in pending_registrations belongs to
+ * someone mid-payment. students.matric_no is UNIQUE, so letting a second person
+ * pay for the same matric means they get debited and then fail to register.
+ */
+function matricTaken(PDO $pdo, string $matric): bool {
+    $stmt = $pdo->prepare("SELECT 1 FROM students WHERE matric_no = ? LIMIT 1");
+    $stmt->execute([$matric]);
+    if ($stmt->fetchColumn()) {
+        return true;
+    }
+
+    // JSON_EXTRACT needs MySQL 5.7+/MariaDB 10.2+. If the server can't run it,
+    // fall back rather than blocking every registration on the site.
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT 1 FROM pending_registrations
+             WHERE (matric_no = ? OR JSON_UNQUOTE(JSON_EXTRACT(pair_data, '$.matric_no2')) = ?)
+               AND status = 'pending_payment'
+               AND created_at > (NOW() - INTERVAL 1 HOUR)
+             LIMIT 1"
+        );
+        $stmt->execute([$matric, $matric]);
+    } catch (Throwable $e) {
+        $stmt = $pdo->prepare(
+            "SELECT 1 FROM pending_registrations
+             WHERE matric_no = ? AND status = 'pending_payment'
+               AND created_at > (NOW() - INTERVAL 1 HOUR)
+             LIMIT 1"
+        );
+        $stmt->execute([$matric]);
+    }
+
+    return (bool) $stmt->fetchColumn();
+}
+
+/**
+ * Confirm a department exists AND admits the level being registered.
+ *
+ * The form only lists the departments for the chosen tab, but the select is
+ * client-side: a posted department_id still has to be checked here, or an ND
+ * student could be filed into an HND-only department.
+ */
+function departmentAllowsLevel(PDO $pdo, int $id, string $level): bool {
+    $stmt = $pdo->prepare("SELECT 1 FROM departments WHERE id = ? AND level = ? LIMIT 1");
+    $stmt->execute([$id, $level]);
+    return (bool) $stmt->fetchColumn();
 }
 
 // ====================== HANDLE FORM SUBMISSION ======================
@@ -58,9 +138,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // ==================== HND REGISTRATION ====================
     if (isset($_POST['register_hnd'])) {
         $level         = 'HND';
-        $nd_type       = null;
         $department_id = intval($_POST['department_id'] ?? 0);
-        $session       = trim($_POST['session'] ?? DEFAULT_SESSION);
+        $session       = trim($_POST['session'] ?? '');
         $address       = trim($_POST['address'] ?? '');
 
         $matric_no = strtoupper(trim($_POST['matric_no'] ?? ''));
@@ -69,37 +148,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $contact   = trim($_POST['contact'] ?? '');
         $password  = $_POST['password'] ?? '';
 
-        if (empty($matric_no) || empty($name) || empty($email) || empty($contact) || empty($password) || $department_id <= 0) {
+        if ($matric_no === '' || $name === '' || $email === '' || $contact === '' || $password === '' || $address === '') {
             $errors[] = "All fields are required for HND registration.";
         }
 
-        // Check duplicate matric
-        $stmt = $pdo->prepare("SELECT id FROM students WHERE matric_no = ?");
-        $stmt->execute([$matric_no]);
-        if ($stmt->rowCount() > 0) {
-            $errors[] = "This Matriculation number already exists.";
+        if (!in_array($session, $allowed_sessions, true)) {
+            $errors[] = "Please select a valid academic session.";
+        }
+
+        if ($department_id <= 0 || !departmentAllowsLevel($pdo, $department_id, $level)) {
+            $errors[] = "Please select a department that offers $level.";
+        }
+
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Please enter a valid email address.";
+        }
+
+        if ($password !== '' && strlen($password) < 6) {
+            $errors[] = "Password must be at least 6 characters.";
+        }
+
+        if ($matric_no !== '' && matricTaken($pdo, $matric_no)) {
+            $errors[] = "This Matriculation number is already registered or awaiting payment.";
         }
 
         if (empty($errors)) {
-            $passport_path = uploadPassport('passport');
+            $passport_path = uploadPassport('passport', 'Passport photo');
 
             if ($passport_path) {
-                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $hash    = password_hash($password, PASSWORD_DEFAULT);
                 $temp_id = "HND_" . time() . rand(1000, 9999);
 
-                $stmt = $pdo->prepare("INSERT INTO pending_registrations 
-                    (temp_id, level, department_id, session, address, matric_no, name, email, contact, 
-                     password_hash, passport, amount, status) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2000.00, 'pending_payment')");
+                $stmt = $pdo->prepare("INSERT INTO pending_registrations
+                    (temp_id, level, department_id, session, address, matric_no, name, email, contact,
+                     password_hash, passport, amount, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_payment')");
 
-                if ($stmt->execute([$temp_id, $level, $department_id, $session, $address, 
-                                   $matric_no, $name, $email, $contact, $hash, $passport_path])) {
-                    
+                try {
+                    $stmt->execute([$temp_id, $level, $department_id, $session, $address,
+                                    $matric_no, $name, $email, $contact, $hash, $passport_path, FEE_HND]);
+
                     $_SESSION['pending_temp_id'] = $temp_id;
                     header("Location: initialize_payment.php?temp_id=" . urlencode($temp_id));
                     exit;
-                } else {
-                    $errors[] = "Failed to start registration process.";
+                } catch (Throwable $e) {
+                    discardPassport($passport_path);
+                    $errors[] = "Failed to start registration process. Please try again.";
                 }
             }
         }
@@ -110,7 +204,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $level         = 'ND';
         $nd_type       = strtoupper(trim($_POST['nd_type'] ?? ''));
         $department_id = intval($_POST['department_id'] ?? 0);
-        $session       = trim($_POST['session'] ?? DEFAULT_SESSION);
+        $session       = trim($_POST['session'] ?? '');
         $address       = trim($_POST['address'] ?? '');
 
         $matric_no1 = strtoupper(trim($_POST['matric_no1'] ?? ''));
@@ -125,24 +219,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $contact2   = trim($_POST['contact2'] ?? '');
         $password2  = $_POST['password2'] ?? '';
 
-        if ($matric_no1 === $matric_no2) {
+        // The ND branch previously validated almost nothing, so a half-empty pair
+        // could reach Paystack and only fail after the students had paid.
+        if ($matric_no1 === '' || $name1 === '' || $email1 === '' || $contact1 === '' || $password1 === '') {
+            $errors[] = "All fields are required for Student 1.";
+        }
+
+        if ($matric_no2 === '' || $name2 === '' || $email2 === '' || $contact2 === '' || $password2 === '') {
+            $errors[] = "All fields are required for Student 2.";
+        }
+
+        if ($address === '') {
+            $errors[] = "Address is required.";
+        }
+
+        if (!in_array($nd_type, ['FT', 'DPT'], true)) {
+            $errors[] = "Please select a valid ND type.";
+        }
+
+        if (!in_array($session, $allowed_sessions, true)) {
+            $errors[] = "Please select a valid academic session.";
+        }
+
+        if ($department_id <= 0 || !departmentAllowsLevel($pdo, $department_id, $level)) {
+            $errors[] = "Please select a department that offers $level.";
+        }
+
+        if ($email1 !== '' && !filter_var($email1, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Student 1's email address is not valid.";
+        }
+
+        if ($email2 !== '' && !filter_var($email2, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Student 2's email address is not valid.";
+        }
+
+        if ($password1 !== '' && strlen($password1) < 6) {
+            $errors[] = "Student 1's password must be at least 6 characters.";
+        }
+
+        if ($password2 !== '' && strlen($password2) < 6) {
+            $errors[] = "Student 2's password must be at least 6 characters.";
+        }
+
+        if ($matric_no1 !== '' && $matric_no1 === $matric_no2) {
             $errors[] = "Both students cannot have the same matric number.";
         }
 
-        if ($department_id <= 0) {
-            $errors[] = "Please select a department.";
+        if ($matric_no1 !== '' && matricTaken($pdo, $matric_no1)) {
+            $errors[] = "Matric number 1 is already registered or awaiting payment.";
         }
 
-        // Check duplicates
-        $stmt = $pdo->prepare("SELECT id FROM students WHERE matric_no = ?");
-        $stmt->execute([$matric_no1]);
-        if ($stmt->rowCount() > 0) $errors[] = "Matric number 1 already exists.";
-        $stmt->execute([$matric_no2]);
-        if ($stmt->rowCount() > 0) $errors[] = "Matric number 2 already exists.";
+        if ($matric_no2 !== '' && $matric_no2 !== $matric_no1 && matricTaken($pdo, $matric_no2)) {
+            $errors[] = "Matric number 2 is already registered or awaiting payment.";
+        }
 
         if (empty($errors)) {
-            $passport1 = uploadPassport('passport1');
-            $passport2 = uploadPassport('passport2');
+            $passport1 = uploadPassport('passport1', "Student 1's passport photo");
+            $passport2 = uploadPassport('passport2', "Student 2's passport photo");
 
             if ($passport1 && $passport2) {
                 $hash1 = password_hash($password1, PASSWORD_DEFAULT);
@@ -159,21 +292,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'passport2'       => $passport2
                 ]);
 
-                $stmt = $pdo->prepare("INSERT INTO pending_registrations 
-                    (temp_id, level, nd_type, department_id, session, address, matric_no, name, email, 
-                     contact, password_hash, passport, pair_data, amount, status) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 4000.00, 'pending_payment')");
+                $stmt = $pdo->prepare("INSERT INTO pending_registrations
+                    (temp_id, level, nd_type, department_id, session, address, matric_no, name, email,
+                     contact, password_hash, passport, pair_data, amount, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_payment')");
 
-                if ($stmt->execute([$temp_id, $level, $nd_type, $department_id, $session, $address, 
-                                   $matric_no1, $name1, $email1, $contact1, $hash1, $passport1, 
-                                   $pair_data])) {
-                    
+                try {
+                    $stmt->execute([$temp_id, $level, $nd_type, $department_id, $session, $address,
+                                    $matric_no1, $name1, $email1, $contact1, $hash1, $passport1,
+                                    $pair_data, FEE_ND]);
+
                     $_SESSION['pending_temp_id'] = $temp_id;
                     header("Location: initialize_payment.php?temp_id=" . urlencode($temp_id));
                     exit;
-                } else {
-                    $errors[] = "Failed to start registration process.";
+                } catch (Throwable $e) {
+                    discardPassport($passport1);
+                    discardPassport($passport2);
+                    $errors[] = "Failed to start registration process. Please try again.";
                 }
+            } else {
+                // One upload succeeded and the other didn't — don't leave the
+                // orphan behind for every retry.
+                discardPassport($passport1);
+                discardPassport($passport2);
             }
         }
     }
@@ -182,9 +323,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($errors)) {
         $message = "<div class='alert alert-danger'><ul>";
         foreach ($errors as $err) {
-            $message .= "<li>" . htmlspecialchars($err) . "</li>";
+            $message .= "<li>" . htmlspecialchars($err, ENT_QUOTES, 'UTF-8') . "</li>";
         }
         $message .= "</ul></div>";
+    }
+}
+
+// Load departments once, split by level: each tab only offers the departments
+// that admit that level (Computer Science is ND only, the rest are HND only).
+$departments_by_level = ['ND' => [], 'HND' => []];
+foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->fetchAll(PDO::FETCH_ASSOC) as $d) {
+    if (isset($departments_by_level[$d['level']])) {
+        $departments_by_level[$d['level']][] = $d;
     }
 }
 ?>
@@ -194,7 +344,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NACOS FPE - Student Registration & Login</title>
+    <title>NACOS FPE - Student Registration &amp; Login</title>
     <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -203,8 +353,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .form-control, .form-select { border-radius: 10px; }
         .btn-success { border-radius: 10px; padding: 12px 30px; font-weight: 600; }
         .nav-tabs .nav-link { border-radius: 10px 10px 0 0; font-weight: 600; }
-        .section-title { font-size: 1.1rem; font-weight: 700; color:rgb(18, 194, 150); }
-        .pair-card { border: 2px solidrgb(13, 253, 181); border-radius: 12px; background: #f8f9fa; }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: rgb(18, 194, 150); }
+        .pair-card { border: 2px solid rgb(13, 253, 181); border-radius: 12px; background: #f8f9fa; }
     </style>
 </head>
 <body class="py-5">
@@ -214,13 +364,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 <div class="text-center mb-4">
                     <h1 class="display-5 fw-bold text-success">NACOS FPE Project Repository</h1>
-                    <p class="lead text-muted">ND & HND Student Registration Portal</p>
+                    <p class="lead text-muted">ND &amp; HND Student Registration Portal</p>
                 </div>
 
                 <ul class="nav nav-tabs mb-4 justify-content-center" id="mainTabs" role="tablist">
                     <li class="nav-item"><button class="nav-link active" id="hnd-tab" data-bs-toggle="tab" data-bs-target="#hnd">HND Registration</button></li>
                     <li class="nav-item"><button class="nav-link" id="nd-tab" data-bs-toggle="tab" data-bs-target="#nd">ND Pair Registration</button></li>
-                    
                 </ul>
 
                 <div class="tab-content">
@@ -238,25 +387,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <div class="row mb-4">
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Department <span class="text-danger">*</span></label>
+                                            <?php if (empty($departments_by_level['HND'])): ?>
+                                                <select class="form-select" disabled>
+                                                    <option>No HND department available - contact admin</option>
+                                                </select>
+                                            <?php else: ?>
                                             <select class="form-select" name="department_id" required>
-                                                <?php
-                                                $stmt = $pdo->query("SELECT id, name FROM departments ORDER BY name");
-                                                while ($dept = $stmt->fetch()) {
-                                                    echo "<option value='{$dept['id']}'>{$dept['name']}</option>";
-                                                }
-                                                ?>
+                                                <option value="">-- Select Department --</option>
+                                                <?php foreach ($departments_by_level['HND'] as $dept): ?>
+                                                    <option value="<?= (int) $dept['id'] ?>"><?= htmlspecialchars($dept['name'], ENT_QUOTES, 'UTF-8') ?></option>
+                                                <?php endforeach; ?>
                                             </select>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Session <span class="text-danger">*</span></label>
-                                            <select class="form-control" name="session" required>
-    <option value="">-- Select Academic Session --</option>
-    <option value="2023/2024" <?= (DEFAULT_SESSION ?? '2024/2025') === '2023/2024' ? 'selected' : '' ?>>2023/2024</option>
-    <option value="2024/2025" <?= (DEFAULT_SESSION ?? '2024/2025') === '2024/2025' ? 'selected' : '' ?>>2024/2025</option>
-    <option value="2025/2026" <?= (DEFAULT_SESSION ?? '2024/2025') === '2025/2026' ? 'selected' : '' ?>>2025/2026</option>
-    <!--<option value="2026/2027" <?= (DEFAULT_SESSION ?? '2024/2025') === '2026/2027' ? 'selected' : '' ?>>2026/2027</option>-->
-    <!--<option value="2027/2028" <?= (DEFAULT_SESSION ?? '2024/2025') === '2027/2028' ? 'selected' : '' ?>>2027/2028</option>-->
-</select>
+                                            <select class="form-select" name="session" required>
+                                                <?= session_options($allowed_sessions) ?>
+                                            </select>
                                         </div>
                                     </div>
 
@@ -285,7 +433,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Password <span class="text-danger">*</span></label>
-                                            <input type="password" class="form-control" name="password" required>
+                                            <input type="password" class="form-control" name="password" minlength="6" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Passport Photo <span class="text-danger">*</span></label>
@@ -294,13 +442,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
 
                                     <div class="text-center mt-5">
-                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay & Register HND (₦2,000)</button>
+                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay &amp; Register HND (&#8358;<?= number_format(FEE_HND) ?>)</button>
                                     </div>
                                 </form>
-                                <div class="text-center ">
-                                <p>Already Have An Account? 
-                    <a href="index.php" class="text-success fw-bold">Login here</a>
-                </p></div>
+                                <div class="text-center">
+                                    <p>Already Have An Account?
+                                        <a href="index.php" class="text-success fw-bold">Login here</a>
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -325,28 +474,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Department <span class="text-danger">*</span></label>
+                                            <?php if (empty($departments_by_level['ND'])): ?>
+                                                <select class="form-select" disabled>
+                                                    <option>No ND department available - contact admin</option>
+                                                </select>
+                                            <?php else: ?>
                                             <select class="form-select" name="department_id" required>
-                                                <?php
-                                                $stmt = $pdo->query("SELECT id, name FROM departments ORDER BY name");
-                                                while ($dept = $stmt->fetch()) {
-                                                    echo "<option value='{$dept['id']}'>{$dept['name']}</option>";
-                                                }
-                                                ?>
+                                                <option value="">-- Select Department --</option>
+                                                <?php foreach ($departments_by_level['ND'] as $dept): ?>
+                                                    <option value="<?= (int) $dept['id'] ?>"><?= htmlspecialchars($dept['name'], ENT_QUOTES, 'UTF-8') ?></option>
+                                                <?php endforeach; ?>
                                             </select>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
 
                                     <div class="row mb-4">
                                         <div class="col-md-12">
                                             <label class="form-label fw-bold">Session <span class="text-danger">*</span></label>
-                                            <select class="form-control" name="session" required>
-    <option value="">-- Select Academic Session --</option>
-    <option value="2023/2024" <?= (DEFAULT_SESSION ?? '2024/2025') === '2023/2024' ? 'selected' : '' ?>>2023/2024</option>
-    <option value="2024/2025" <?= (DEFAULT_SESSION ?? '2024/2025') === '2024/2025' ? 'selected' : '' ?>>2024/2025</option>
-    <option value="2025/2026" <?= (DEFAULT_SESSION ?? '2024/2025') === '2025/2026' ? 'selected' : '' ?>>2025/2026</option>
-    <!--<option value="2026/2027" <?= (DEFAULT_SESSION ?? '2024/2025') === '2026/2027' ? 'selected' : '' ?>>2026/2027</option>-->
-    <!--<option value="2027/2028" <?= (DEFAULT_SESSION ?? '2024/2025') === '2027/2028' ? 'selected' : '' ?>>2027/2028</option>-->
-</select>
+                                            <select class="form-select" name="session" required>
+                                                <?= session_options($allowed_sessions) ?>
+                                            </select>
                                         </div>
                                     </div>
 
@@ -368,7 +516,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                 <div class="mb-3"><label class="form-label">Full Name <span class="text-danger">*</span></label><input type="text" class="form-control" name="name1" required></div>
                                                 <div class="mb-3"><label class="form-label">Email <span class="text-danger">*</span></label><input type="email" class="form-control" name="email1" required></div>
                                                 <div class="mb-3"><label class="form-label">Phone Contact <span class="text-danger">*</span></label><input type="text" class="form-control" name="contact1" required></div>
-                                                <div class="mb-3"><label class="form-label">Password <span class="text-danger">*</span></label><input type="password" class="form-control" name="password1" required></div>
+                                                <div class="mb-3"><label class="form-label">Password <span class="text-danger">*</span></label><input type="password" class="form-control" name="password1" minlength="6" required></div>
                                                 <div><label class="form-label">Passport Photo <span class="text-danger">*</span></label><input type="file" class="form-control" name="passport1" accept="image/jpeg,image/png" required></div>
                                             </div>
                                         </div>
@@ -384,37 +532,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                 <div class="mb-3"><label class="form-label">Full Name <span class="text-danger">*</span></label><input type="text" class="form-control" name="name2" required></div>
                                                 <div class="mb-3"><label class="form-label">Email <span class="text-danger">*</span></label><input type="email" class="form-control" name="email2" required></div>
                                                 <div class="mb-3"><label class="form-label">Phone Contact <span class="text-danger">*</span></label><input type="text" class="form-control" name="contact2" required></div>
-                                                <div class="mb-3"><label class="form-label">Password <span class="text-danger">*</span></label><input type="password" class="form-control" name="password2" required></div>
+                                                <div class="mb-3"><label class="form-label">Password <span class="text-danger">*</span></label><input type="password" class="form-control" name="password2" minlength="6" required></div>
                                                 <div><label class="form-label">Passport Photo <span class="text-danger">*</span></label><input type="file" class="form-control" name="passport2" accept="image/jpeg,image/png" required></div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="text-center mt-5">
-                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay & Register ND Pair (₦4,000)</button>
+                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay &amp; Register ND Pair (&#8358;<?= number_format(FEE_ND) ?>)</button>
                                     </div>
-                                             <div class="text-center ">
-                                <p>Already Have An Account? 
-                    <a href="index.php" class="text-success fw-bold">Login here</a>
-                </p></div>
                                 </form>
+                                <div class="text-center">
+                                    <p>Already Have An Account?
+                                        <a href="index.php" class="text-success fw-bold">Login here</a>
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                  
-                
-                
-
-                </p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<?php require __DIR__ . '/../includes/password_toggle.php'; ?>
 </body>
 </html>

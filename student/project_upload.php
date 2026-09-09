@@ -31,11 +31,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($file['size'] > 10*1024*1024) {
             $error = "File size must be less than 10MB.";
         } else {
-            $upload_dir = "uploads/projects/";
+            $upload_dir = UPLOAD_PROJECT_DIR;   // absolute; see includes/config.php
             if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 
-            $new_name = "proj_" . uniqid() . ".pdf";
+            $new_name  = "proj_" . uniqid() . ".pdf";
             $full_path = $upload_dir . $new_name;
+
+            // projects.file_path keeps the historical "uploads/projects/x.pdf"
+            // shape so existing rows stay valid; the file itself now goes to
+            // the one canonical directory. Views resolve it via project_url().
+            $stored_path = 'uploads/projects/' . $new_name;
 
             if (move_uploaded_file($file['tmp_name'], $full_path)) {
                 // Save data in session
@@ -43,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'title'      => $title,
                     'abstract'   => $abstract,
                     'supervisor' => $supervisor,
-                    'file_path'  => $full_path
+                    'file_path'  => $stored_path
                 ];
 
                 header("Location: submission.php");
@@ -94,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="file" name="softcopy" class="form-control" accept=".pdf" required>
                 </div>
                 <button type="submit" class="btn btn-success btn-lg w-100">Continue</button>
+                <a href="dashboard.php" class="btn btn-secondary w-100 mt-2">Back to Dashboard</a>
             </form>
         </div>
     </div>

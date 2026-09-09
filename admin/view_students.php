@@ -101,7 +101,7 @@ $students = $stmt->fetchAll();
                                 <td><?= htmlspecialchars($s['level']) ?></td>
                                 <td>
                                     <?php if (!empty($s['passport'])): ?>
-                                        <img src="uploads/passports/<?= htmlspecialchars($s['passport']) ?>" 
+                                        <img src="<?= htmlspecialchars(passport_url($s['passport'])) ?>" 
                                              width="50" height="50" style="object-fit:cover; border-radius:50%;">
                                     <?php else: ?>
                                         <span class="text-muted">No photo</span>

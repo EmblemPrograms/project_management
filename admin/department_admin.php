@@ -83,5 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </div>
+<?php require __DIR__ . '/../includes/password_toggle.php'; ?>
 </body>
 </html>

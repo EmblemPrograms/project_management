@@ -1,0 +1,3 @@
+# Database dumps and migrations are not web content. Nothing in this folder
+# should ever be downloadable: the dumps contain admin password hashes.
+Require all denied

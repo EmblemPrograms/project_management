@@ -7,9 +7,25 @@ require_once 'includes/config.php';
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  
+    
+    
+    
+
+    
+  
+</head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NACOS FPE CHAPTER | Project Management System</title>
+    <meta name="description" content="NACOS FPE Chapter Project Management System - Submit, manage and track final year projects at Federal Polytechnic Ede.">
+    <meta name="keywords" content="NACOS FPE, project management, final year project, Federal Polytechnic Ede">
+    <meta name="robots" content="index, follow">
+      <!-- Open Graph (for social media) -->
+    <meta property="og:title" content="NACOS FPE Chapter - Project Management System">
+    <meta property="og:description" content="Modern platform for final year project submission and management.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.schoolofcomputingfpe.com/">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
@@ -53,7 +69,7 @@ require_once 'includes/config.php';
 
         .hero {
             background: linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.48)),
-                url('https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg?auto=compress&cs=tinysrgb&w=1600') center/cover no-repeat;
+                url('https://res.cloudinary.com/dxpbjxzfv/image/upload/v1784633145/20260721_112029_y9inbw.jpg') center/cover no-repeat;
             color: #f8fafc;
             min-height: calc(100vh - 72px);
             display: flex;
@@ -193,6 +209,37 @@ require_once 'includes/config.php';
             }
         }
     </style>
+    <!-- Structured Data - Organization + WebSite -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "NACOS FPE Chapter",
+  "url": "https://www.schoolofcomputingfpe.com/",
+//   "logo": "https://www.schoolofcomputingfpe.com/your-logo.png",
+  "description": "Project Management System for Final Year Projects at Federal Polytechnic Ede",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Ede",
+    "addressRegion": "Osun",
+    "addressCountry": "NG"
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "NACOS FPE Project Management System",
+  "url": "https://www.schoolofcomputingfpe.com/",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://www.schoolofcomputingfpe.com/?search={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
 </head>
 <body>
 
@@ -357,7 +404,7 @@ require_once 'includes/config.php';
                 </ul>
             </div>
             <div class="col-lg-6 text-center">
-                <img src="https://images.pexels.com/photos/3184325/pexels-photo-3184325.jpeg?auto=compress&cs=tinysrgb&w=1200" 
+                <img src="https://res.cloudinary.com/dxpbjxzfv/image/upload/v1784633145/20260721_112029_y9inbw.jpg?auto=compress&cs=tinysrgb&w=1200" 
                      class="img-fluid rounded-glow" alt="Students collaborating">
             </div>
         </div>

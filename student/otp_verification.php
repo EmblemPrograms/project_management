@@ -1,5 +1,15 @@
 <?php
 // otp_verification.php
+declare(strict_types=1);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start([
+        'cookie_lifetime' => 0,
+        'cookie_httponly'  => true,
+        'cookie_samesite'  => 'Lax',
+        'use_strict_mode'  => true,
+    ]);
+}
 
 require_once '../includes/config.php';
 require_once 'send_otp.php';
@@ -47,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['resend_otp'])) {
 
         $_SESSION['success'] = "🎉 Registration completed successfully! Welcome to NACOS FPE Chapter.";
 
-        header("Location: student_dashboard.php");
+        header("Location: dashboard.php");
         exit;
 
     } else {

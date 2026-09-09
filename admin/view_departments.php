@@ -15,7 +15,7 @@ $stmt = $pdo->prepare("
     FROM departments d
     LEFT JOIN students s ON s.department_id = d.id
     GROUP BY d.id
-    ORDER BY d.name ASC
+    ORDER BY d.level ASC, d.name ASC
 ");
 $stmt->execute();
 $departments = $stmt->fetchAll();
@@ -51,6 +51,7 @@ $departments = $stmt->fetchAll();
                             <tr>
                                 <th>Department Name</th>
                                 <th>Code</th>
+                                <th class="text-center">Level</th>
                                 <th class="text-center">Total Students</th>
                                 <th class="text-center">Actions</th>
                             </tr>
@@ -59,7 +60,12 @@ $departments = $stmt->fetchAll();
                             <?php foreach ($departments as $dept): ?>
                             <tr>
                                 <td><strong><?= htmlspecialchars($dept['name']) ?></strong></td>
-                                
+                                <td><?= htmlspecialchars($dept['code'] ?? '') ?></td>
+                                <td class="text-center">
+                                    <span class="badge <?= ($dept['level'] ?? '') === 'ND' ? 'bg-primary' : 'bg-dark' ?>">
+                                        <?= htmlspecialchars($dept['level'] ?? '—') ?>
+                                    </span>
+                                </td>
                                 <td class="text-center">
                                     <span class="badge bg-success fs-6"><?= $dept['total_students'] ?></span>
                                 </td>

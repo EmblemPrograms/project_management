@@ -15,27 +15,51 @@ if (isset($_GET['reference'])) {
     $reference = $_GET['reference'];
     $user_id = $_SESSION['user_id'];
 
-    // TODO: (Strongly Recommended) Verify payment with Paystack API here
+    // ---------- Verify payment with Paystack before trusting it ----------
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => "https://api.paystack.co/transaction/verify/" . rawurlencode($reference),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            "Authorization: Bearer " . PAYSTACK_SECRET_KEY
+        ],
+    ] + paystack_ssl_opts());
 
-    try {
-        // Update student payment status
-        $stmt = $pdo->prepare("UPDATE students SET 
-            payment_status = 'paid', 
-            payment_reference = ?, 
-            payment_date = NOW() 
-            WHERE id = ?");
-        $stmt->execute([$reference, $user_id]);
+    $response = curl_exec($curl);
+    $curl_err = curl_error($curl);
+    curl_close($curl);
 
-        // Set session for OTP flow
-        $_SESSION['pending_submission'] = true;
-        $_SESSION['payment_reference'] = $reference;
+    $result = json_decode($response, true);
 
-        // Redirect to OTP verification
-        header("Location: verify_otp_submission.php");
-        exit;
+    $verified = is_array($result)
+        && !empty($result['status']) && $result['status'] === true
+        && isset($result['data']['status']) && $result['data']['status'] === 'success';
 
-    } catch (Exception $e) {
-        $error = "Database error: " . $e->getMessage();
+    if (!$verified) {
+        $error = $curl_err
+            ? "Could not reach Paystack to verify payment. Please try again."
+            : "Payment could not be verified. If you were debited, contact admin with reference: " . htmlspecialchars($reference);
+    } else {
+        try {
+            // Update student payment status only after successful verification
+            $stmt = $pdo->prepare("UPDATE students SET
+                payment_status = 'paid',
+                payment_reference = ?,
+                payment_date = NOW()
+                WHERE id = ?");
+            $stmt->execute([$reference, $user_id]);
+
+            // Set session for OTP flow
+            $_SESSION['pending_submission'] = true;
+            $_SESSION['payment_reference'] = $reference;
+
+            // Redirect to OTP verification
+            header("Location: submission.php");
+            exit;
+
+        } catch (Exception $e) {
+            $error = "Database error: " . $e->getMessage();
+        }
     }
 } else {
     $error = "No payment reference received from Paystack.";
@@ -58,7 +82,7 @@ if (isset($_GET['reference'])) {
         <div class="card-body text-center p-5">
             <h3 class="text-danger">Payment Processing Error</h3>
             <p><?= htmlspecialchars($error) ?></p>
-            <a href="student_dashboard.php" class="btn btn-success">Go to Dashboard</a>
+            <a href="dashboard.php" class="btn btn-success">Go to Dashboard</a>
         </div>
     </div>
 </div>

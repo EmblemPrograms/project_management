@@ -173,33 +173,33 @@ $projects = $stmt->fetchAll();
                 <?php endif; ?>
 
                 <!-- Submission Dates & Notification Form -->
-                <!-- <div class="card mb-4 border-primary">
-                    <div class="card-header bg-primary text-white">
-                        <h5><i class="fas fa-calendar-alt"></i> Project Submission Period & Notification</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" class="row g-3">
-                            <div class="col-md-5">
-                                <label class="form-label">Submission Start Date</label>
-                                <input type="date" name="submission_start" class="form-control"
-                                    value="<?= htmlspecialchars($submission_start) ?>" required>
-                            </div>
-                            <div class="col-md-5">
-                                <label class="form-label">Submission End Date</label>
-                                <input type="date" name="submission_end" class="form-control"
-                                    value="<?= htmlspecialchars($submission_end) ?>" required>
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" name="update_submission" class="btn btn-success w-100">
-                                    <i class="fas fa-paper-plane"></i> Update & Notify All Students
-                                </button>
-                            </div>
-                        </form>
-                        <small class="text-muted mt-2 d-block">
-                            This will save the dates and immediately email every registered student.
-                        </small>
-                    </div>
-                </div> -->
+                <!--<div class="card mb-4 border-primary">-->
+                <!--    <div class="card-header bg-primary text-white">-->
+                <!--        <h5><i class="fas fa-calendar-alt"></i> Project Submission Period & Notification</h5>-->
+                <!--    </div>-->
+                <!--    <div class="card-body">-->
+                <!--        <form method="POST" class="row g-3">-->
+                <!--            <div class="col-md-5">-->
+                <!--                <label class="form-label">Submission Start Date</label>-->
+                <!--                <input type="date" name="submission_start" class="form-control"-->
+                <!--                    value="<?= htmlspecialchars($submission_start) ?>" required>-->
+                <!--            </div>-->
+                <!--            <div class="col-md-5">-->
+                <!--                <label class="form-label">Submission End Date</label>-->
+                <!--                <input type="date" name="submission_end" class="form-control"-->
+                <!--                    value="<?= htmlspecialchars($submission_end) ?>" required>-->
+                <!--            </div>-->
+                <!--            <div class="col-md-2 d-flex align-items-end">-->
+                <!--                <button type="submit" name="update_submission" class="btn btn-success w-100">-->
+                <!--                    <i class="fas fa-paper-plane"></i> Update & Notify All Students-->
+                <!--                </button>-->
+                <!--            </div>-->
+                <!--        </form>-->
+                <!--        <small class="text-muted mt-2 d-block">-->
+                <!--            This will save the dates and immediately email every registered student.-->
+                <!--        </small>-->
+                <!--    </div>-->
+                <!--</div>-->
 
                 <!-- Your existing Quick Action Cards -->
                 <div class="row g-4 mb-4">
@@ -226,6 +226,15 @@ $projects = $stmt->fetchAll();
                             <div class="card text-center h-100 shadow-sm">
                                 <div class="card-body">
                                     <h5>📋 View All Departments</h5>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="view_payments.php" class="text-decoration-none">
+                            <div class="card text-center h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h5>💰 View Payments</h5>
                                 </div>
                             </div>
                         </a>

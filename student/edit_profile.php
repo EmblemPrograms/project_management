@@ -38,16 +38,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = "Passport photo must be less than 5MB.";
                 } else {
                     $new_filename = "pass_" . uniqid() . "." . $ext;
-                    $upload_path = "uploads/passports/" . $new_filename;
+                    $upload_path = UPLOAD_PASSPORT_DIR . $new_filename;
 
-                    if (!is_dir("uploads/passports")) {
-                        mkdir("uploads/passports", 0777, true);
+                    if (!is_dir(UPLOAD_PASSPORT_DIR)) {
+                        mkdir(UPLOAD_PASSPORT_DIR, 0755, true);
                     }
 
                     if (move_uploaded_file($file['tmp_name'], $upload_path)) {
                         // Delete old photo if exists
-                        if (!empty($student['passport']) && file_exists("uploads/passports/" . $student['passport'])) {
-                            unlink("uploads/passports/" . $student['passport']);
+                        if (!empty($student['passport'])
+                            && is_file(UPLOAD_PASSPORT_DIR . basename($student['passport']))) {
+                            unlink(UPLOAD_PASSPORT_DIR . basename($student['passport']));
                         }
                         $update_fields .= ", passport = ?";
                         $params[] = $new_filename;
@@ -83,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile - NACOS FPE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -110,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Current Passport -->
                 <div class="text-center mb-4">
                     <?php if (!empty($student['passport'])): ?>
-                        <img src="uploads/passports/<?= htmlspecialchars($student['passport']) ?>" 
+                        <img src="<?= htmlspecialchars(passport_url($student['passport'])) ?>" 
                              class="passport-preview mb-2" alt="Current Photo">
                     <?php else: ?>
                         <div class="passport-preview bg-secondary d-flex align-items-center justify-content-center text-white fs-1 mb-2">
@@ -146,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <button type="submit" class="btn btn-success btn-lg w-100">Save Changes</button>
-                <a href="student_dashboard.php" class="btn btn-secondary w-100 mt-2">Back to Dashboard</a>
+                <a href="dashboard.php" class="btn btn-secondary w-100 mt-2">Back to Dashboard</a>
             </form>
         </div>
     </div>

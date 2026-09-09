@@ -1,0 +1,25 @@
+# Real credentials for this environment: database password, Paystack secret
+# key, SMTP password. The repository is public — this file must never be
+# tracked. config.local.example.php is the committed template.
+includes/config.local.php
+
+# PHP error logs. These leak absolute server paths and are per-environment.
+error_log
+*.log
+
+# Database dumps. school37_project_repo.sql carries every admin's bcrypt
+# password hash — it must never be in the repository. The migrations under
+# DataBase/add_*.sql ARE tracked; only full dumps are excluded.
+DataBase/*.sql
+!DataBase/add_*.sql
+
+# Student uploads: passport photos and project PDFs. These are user data, not
+# source. They live on the server and in backups, not in version control.
+uploads/*
+!uploads/.htaccess
+!uploads/passports/
+!uploads/projects/
+uploads/passports/*
+uploads/projects/*
+!uploads/passports/.gitkeep
+!uploads/projects/.gitkeep
