@@ -41,6 +41,13 @@ Via cPanel → phpMyAdmin → select the database → SQL tab → paste and run:
 2. `DataBase/add_password_resets.sql`
    Creates the password_resets table for the student and admin reset flows.
 
+3. `DataBase/add_payment_settings.sql`
+   Creates payment_settings and seeds it with the fees that were previously
+   hardcoded (ND 4000 per pair, HND 2000 per student), so prices do not change
+   on deploy. Afterwards the admin sets them at admin/payment_settings.php.
+   If this is not run, registration still works at those same fallback prices
+   and logs a line saying the migration is outstanding.
+
 `add_payment_tracking.sql` is already applied on your database (its columns
 are present in the dump) — do not run it again.
 

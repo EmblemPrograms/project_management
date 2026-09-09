@@ -2,16 +2,17 @@
 // ====================== LOAD CONFIG & OTP FUNCTION ======================
 // config.php starts the session (guarded) and builds $pdo.
 require_once '../includes/config.php';
+require_once '../includes/fees.php';
 require_once 'send_otp.php';
 
 $message = "";
 $errors  = [];
 
-// Fees live here, in one place. process_payment.php compares the amount Paystack
-// actually collected against pending_registrations.amount, so the button label
-// and the stored amount must never drift apart.
-const FEE_HND = 2000.00;
-const FEE_ND  = 4000.00;
+// Fees are set by the admin in admin/payment_settings.php. Read once here, on
+// the server: process_payment.php compares what Paystack actually collected
+// against pending_registrations.amount, so the button label and the stored
+// amount must never drift apart, and neither may come from the browser.
+$FEES = get_fees($pdo);
 
 // Sessions a student may pick. The POSTed value is validated against this list
 // so a crafted request can't store an arbitrary string.
@@ -186,7 +187,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 try {
                     $stmt->execute([$temp_id, $level, $department_id, $session, $address,
-                                    $matric_no, $name, $email, $contact, $hash, $passport_path, FEE_HND]);
+                                    $matric_no, $name, $email, $contact, $hash, $passport_path, $FEES['HND']]);
 
                     $_SESSION['pending_temp_id'] = $temp_id;
                     header("Location: initialize_payment.php?temp_id=" . urlencode($temp_id));
@@ -300,7 +301,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 try {
                     $stmt->execute([$temp_id, $level, $nd_type, $department_id, $session, $address,
                                     $matric_no1, $name1, $email1, $contact1, $hash1, $passport1,
-                                    $pair_data, FEE_ND]);
+                                    $pair_data, $FEES['ND']]);
 
                     $_SESSION['pending_temp_id'] = $temp_id;
                     header("Location: initialize_payment.php?temp_id=" . urlencode($temp_id));
@@ -417,7 +418,7 @@ foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->f
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label">Matric No <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="matric_no" placeholder="e.g. CS20240101207" required>
+                                            <input type="text" class="form-control" name="matric_no" placeholder="e.g. CS20240101207" required minlength="10" maxlength="15">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Full Name <span class="text-danger">*</span></label>
@@ -429,7 +430,7 @@ foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->f
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Phone Contact <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="contact" placeholder="080xxxxxxxxx" required>
+                                            <input type="tel" class="form-control" name="contact" placeholder="080xxxxxxxxx" required maxlength="11" pattern="\d{11}" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')" >
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Password <span class="text-danger">*</span></label>
@@ -442,7 +443,7 @@ foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->f
                                     </div>
 
                                     <div class="text-center mt-5">
-                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay &amp; Register HND (&#8358;<?= number_format(FEE_HND) ?>)</button>
+                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay &amp; Register HND (&#8358;<?= number_format($FEES['HND']) ?>)</button>
                                     </div>
                                 </form>
                                 <div class="text-center">
@@ -511,11 +512,11 @@ foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->f
                                                 <h6 class="text-success mb-3">Student 1</h6>
                                                 <div class="mb-3">
                                                     <label class="form-label">Matric No <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="matric_no1" placeholder="e.g. CS20240101207" required>
+                                                    <input type="text" class="form-control" name="matric_no1" placeholder="e.g. CS20240101207" required minlength="10" maxlength="15">
                                                 </div>
                                                 <div class="mb-3"><label class="form-label">Full Name <span class="text-danger">*</span></label><input type="text" class="form-control" name="name1" required></div>
                                                 <div class="mb-3"><label class="form-label">Email <span class="text-danger">*</span></label><input type="email" class="form-control" name="email1" required></div>
-                                                <div class="mb-3"><label class="form-label">Phone Contact <span class="text-danger">*</span></label><input type="text" class="form-control" name="contact1" required></div>
+                                                <div class="mb-3"><label class="form-label">Phone Contact <span class="text-danger">*</span></label><input type="tel" class="form-control" name="contact1" required maxlength="11" pattern="\d{11}" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')"></div>
                                                 <div class="mb-3"><label class="form-label">Password <span class="text-danger">*</span></label><input type="password" class="form-control" name="password1" minlength="6" required></div>
                                                 <div><label class="form-label">Passport Photo <span class="text-danger">*</span></label><input type="file" class="form-control" name="passport1" accept="image/jpeg,image/png" required></div>
                                             </div>
@@ -527,11 +528,11 @@ foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->f
                                                 <h6 class="text-success mb-3">Student 2</h6>
                                                 <div class="mb-3">
                                                     <label class="form-label">Matric No <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="matric_no2" placeholder="e.g. OT20241010" required>
+                                                    <input type="text" class="form-control" name="matric_no2" placeholder="e.g. OT20241010" required minlength="10" maxlength="15">
                                                 </div>
                                                 <div class="mb-3"><label class="form-label">Full Name <span class="text-danger">*</span></label><input type="text" class="form-control" name="name2" required></div>
                                                 <div class="mb-3"><label class="form-label">Email <span class="text-danger">*</span></label><input type="email" class="form-control" name="email2" required></div>
-                                                <div class="mb-3"><label class="form-label">Phone Contact <span class="text-danger">*</span></label><input type="text" class="form-control" name="contact2" required></div>
+                                                <div class="mb-3"><label class="form-label">Phone Contact <span class="text-danger">*</span></label><input type="tel" class="form-control" name="contact2" required maxlength="11" pattern="\d{11}" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')"></div>
                                                 <div class="mb-3"><label class="form-label">Password <span class="text-danger">*</span></label><input type="password" class="form-control" name="password2" minlength="6" required></div>
                                                 <div><label class="form-label">Passport Photo <span class="text-danger">*</span></label><input type="file" class="form-control" name="passport2" accept="image/jpeg,image/png" required></div>
                                             </div>
@@ -539,7 +540,7 @@ foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->f
                                     </div>
 
                                     <div class="text-center mt-5">
-                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay &amp; Register ND Pair (&#8358;<?= number_format(FEE_ND) ?>)</button>
+                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay &amp; Register ND Pair (&#8358;<?= number_format($FEES['ND']) ?>)</button>
                                     </div>
                                 </form>
                                 <div class="text-center">

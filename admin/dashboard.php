@@ -239,6 +239,15 @@ $projects = $stmt->fetchAll();
                             </div>
                         </a>
                     </div>
+                    <div class="col-md-4">
+                        <a href="payment_settings.php" class="text-decoration-none">
+                            <div class="card text-center h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h5>🏷️ Set Registration Fees</h5>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Your existing Filter and Projects Table remain exactly the same -->
