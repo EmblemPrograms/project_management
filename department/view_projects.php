@@ -17,7 +17,7 @@ $status     = $_GET['status'] ?? '';
 
 // Build query
 $query = "
-    SELECT p.*, s.name AS student_name, s.matric_no 
+    SELECT p.*, s.name AS student_name, s.matric_no, s.session 
     FROM projects p 
     JOIN students s ON p.student_id = s.id 
     WHERE s.department_id = ?
@@ -115,11 +115,11 @@ $projects = $stmt->fetchAll();
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Matric No</th>
+                            <th style="width:60px;">S/N</th>
                             <th>Student Name</th>
+                            <th>Matric No</th>
                             <th>Project Title</th>
-                            <th>Supervisor</th>
-                            <th>Status</th>
+                            <th>Session</th>
                             <th>Uploaded</th>
                             <th>Action</th>
                         </tr>
@@ -128,17 +128,14 @@ $projects = $stmt->fetchAll();
                         <?php if (empty($projects)): ?>
                             <tr><td colspan="7" class="text-center py-4">No projects found.</td></tr>
                         <?php else: ?>
-                            <?php foreach ($projects as $row): ?>
+                            <?php $sn = 0; ?>
+                            <?php foreach ($projects as $row): $sn++; ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($row['matric_no']) ?></td>
+                                    <td><?= $sn ?></td>
                                     <td><?= htmlspecialchars($row['student_name']) ?></td>
+                                    <td><?= htmlspecialchars($row['matric_no']) ?></td>
                                     <td><?= htmlspecialchars($row['title']) ?></td>
-                                    <td><?= htmlspecialchars($row['supervisor']) ?></td>
-                                    <td>
-                                        <span class="badge bg-<?= $row['status']=='approved' ? 'success' : ($row['status']=='rejected' ? 'danger' : 'warning') ?>">
-                                            <?= ucfirst($row['status']) ?>
-                                        </span>
-                                    </td>
+                                    <td><?= htmlspecialchars($row['session'] ?? '') ?></td>
                                     <td><?= $row['uploaded_at'] ?></td>
                                    <td>
     <?php if ($row['status'] == 'pending'): ?>

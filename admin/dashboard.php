@@ -86,7 +86,7 @@ $status = $_GET['status'] ?? '';
 
 // Build query (your original query remains exactly the same)
 $query = "
-    SELECT p.*, s.name AS student_name, s.matric_no, d.name AS department_name 
+    SELECT p.*, s.name AS student_name, s.matric_no, s.session, d.name AS department_name 
     FROM projects p 
     JOIN students s ON p.student_id = s.id 
     JOIN departments d ON s.department_id = d.id 
@@ -299,13 +299,13 @@ $projects = $stmt->fetchAll();
                             <table class="table table-hover mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Matric No</th>
+                                        <th style="width:60px;">S/N</th>
                                         <th>Student Name</th>
+                                        <th>Matric No</th>
                                         <th>Project Title</th>
-                                        <th>Supervisor</th>
-                                        <th>Department</th>
-                                        <th>Status</th>
+                                        <th>Session</th>
                                         <th>Uploaded</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -314,20 +314,31 @@ $projects = $stmt->fetchAll();
                                             <td colspan="7" class="text-center py-4">No projects found.</td>
                                         </tr>
                                     <?php else: ?>
-                                        <?php foreach ($projects as $row): ?>
+                                        <?php $sn = 0; ?>
+                                        <?php foreach ($projects as $row): $sn++; ?>
                                             <tr>
-                                                <td><?= htmlspecialchars($row['matric_no']) ?></td>
+                                                <td><?= $sn ?></td>
                                                 <td><?= htmlspecialchars($row['student_name']) ?></td>
+                                                <td><?= htmlspecialchars($row['matric_no']) ?></td>
                                                 <td><?= htmlspecialchars($row['title']) ?></td>
-                                                <td><?= htmlspecialchars($row['supervisor']) ?></td>
-                                                <td><?= htmlspecialchars($row['department_name']) ?></td>
-                                                <td>
-                                                    <span
-                                                        class="badge bg-<?= $row['status'] == 'approved' ? 'success' : ($row['status'] == 'rejected' ? 'danger' : 'warning') ?>">
-                                                        <?= ucfirst($row['status']) ?>
-                                                    </span>
-                                                </td>
+                                                <td><?= htmlspecialchars($row['session'] ?? '') ?></td>
                                                 <td><?= $row['uploaded_at'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['file_path'])): ?>
+                                                        <a href="<?= htmlspecialchars(project_url($row['file_path'])) ?>"
+                                                           class="btn btn-info btn-sm me-1" target="_blank">
+                                                            <i class="fas fa-eye"></i> View PDF
+                                                        </a>
+                                                        <?php if ($row['status'] === 'approved'): ?>
+                                                            <a href="<?= htmlspecialchars(project_url($row['file_path'])) ?>"
+                                                               class="btn btn-success btn-sm" download>
+                                                                <i class="fas fa-download"></i> Download
+                                                            </a>
+                                                        <?php endif; ?>
+                                                    <?php else: ?>
+                                                        <span class="text-muted small">&mdash;</span>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
