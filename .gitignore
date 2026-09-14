@@ -8,10 +8,15 @@ error_log
 *.log
 
 # Database dumps. A full dump carries every admin's bcrypt password hash, so
-# it must never be in the repository. The migrations under DataBase/add_*.sql
-# ARE tracked; only full dumps are excluded.
+# it must never be in the repository. The default is therefore to ignore every
+# .sql here, so a dump dropped in this folder can never be committed by
+# accident — hand-written scripts are then allowed back by prefix.
+#   add_*   schema migrations
+#   find_*  read-only diagnostic queries
+# Give a new script one of those prefixes, or git will silently skip it.
 DataBase/*.sql
 !DataBase/add_*.sql
+!DataBase/find_*.sql
 
 # Student uploads: passport photos and project PDFs. These are user data, not
 # source. They live on the server and in backups, not in version control.
