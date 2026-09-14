@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - NACOS FPE</title>
+    <title>Admin Login - School of Computing</title>
     <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-card card">
         <div class="header">
             <h4>Admin Login</h4>
-            <h6>NACOS FPE Chapter</h6>
+            <h6>School of Computing</h6>
         </div>
         
         <div class="card-body p-4">

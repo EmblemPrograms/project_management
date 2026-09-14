@@ -14,7 +14,7 @@ if (isset($_SESSION['admin_id'])) {
 }
 
 $reset_type    = 'admin';
-$reset_title   = 'Admin Password Reset - NACOS FPE';
+$reset_title   = 'Admin Password Reset - School of Computing';
 $reset_heading = 'Admin';
 
 require __DIR__ . '/../includes/password_reset_page.php';

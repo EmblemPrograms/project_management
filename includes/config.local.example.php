@@ -33,6 +33,6 @@ return [
         'username'   => 'you@example.com',
         'password'   => 'your_smtp_or_app_password',
         'from_email' => 'you@example.com',
-        'from_name'  => 'NACOS FPE CHAPTER',
+        'from_name'  => 'School of Computing',
     ],
 ];

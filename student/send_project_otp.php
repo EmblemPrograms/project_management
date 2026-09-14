@@ -35,7 +35,7 @@ try {
     $mail->SMTPDebug = 2;
     $mail->Debugoutput = 'html';
 
-    $mail->setFrom(SMTP_USERNAME, 'NACOS FPE Chapter');
+    $mail->setFrom(SMTP_USERNAME, 'School of Computing');
     $mail->addAddress($student['email']);
 
     $mail->isHTML(true);

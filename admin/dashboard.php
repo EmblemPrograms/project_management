@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_submission']))
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = SMTP_PORT;
 
-            $mail->setFrom('noreply@nacosfpe.edu.ng', 'NACOS FPE Admin');
+            $mail->setFrom('noreply@nacosfpe.edu.ng', 'School of Computing Admin');
             $mail->isHTML(true);
 
             $subject = "Project Submission Portal is Now Open";
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_submission']))
                 <p><strong>Submission Start Date:</strong> " . date('d F, Y', strtotime($start)) . "<br>
                    <strong>Submission End Date:</strong> " . date('d F, Y', strtotime($end)) . "</p>
                 <p>Please ensure you upload your project before the deadline.</p>
-                <p>Best regards,<br>NACOS FPE Admin</p>
+                <p>Best regards,<br>School of Computing Admin</p>
             ";
 
             foreach ($students as $student) {
@@ -131,7 +131,7 @@ $projects = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - NACOS FPE</title>
+    <title>Admin Dashboard - School of Computing</title>
     <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
@@ -157,8 +157,11 @@ $projects = $stmt->fetchAll();
     <div class="container mt-5">
 
         <div class="card shadow">
-            <div class="card-header text-white d-flex justify-content-between">
-                <h4>Admin Dashboard</h4>
+            <div class="card-header text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">Admin Dashboard</h4>
+                    <small class="text-white" style="opacity:.85;">School of Computing</small>
+                </div>
                 <a href="../logout.php" class="btn btn-outline-light btn-sm">Logout</a>
             </div>
 
@@ -234,7 +237,7 @@ $projects = $stmt->fetchAll();
                         <a href="view_payments.php" class="text-decoration-none">
                             <div class="card text-center h-100 shadow-sm">
                                 <div class="card-body">
-                                    <h5>💰 View Payments</h5>
+                                    <h5>💰 View Submission List</h5>
                                 </div>
                             </div>
                         </a>

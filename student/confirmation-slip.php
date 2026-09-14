@@ -1,6 +1,7 @@
 <?php
 // confirmation-slip.php
-require_once '../includes/config.php'; // Contains PDO connection and session_start()
+require_once '../includes/config.php';
+require_once '../includes/pair.php'; // Contains PDO connection and session_start()
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -12,6 +13,15 @@ $project_id = filter_input(INPUT_GET, 'project_id', FILTER_VALIDATE_INT);
 if (!$project_id) {
     die("Invalid project ID.");
 }
+
+// Either half of an ND pair may open the pair's slip; an HND student still
+// only ever matches their own id.
+$slip_ids = profile_student_ids($pdo, (int) $_SESSION['user_id']);
+$slip_ph  = profile_id_placeholders($slip_ids);
+
+// An ND pair's slip carries BOTH names — it is the proof of approval for the
+// project, and the project belongs to the two of them equally.
+$slip_members = profile_members($pdo, (int) $_SESSION['user_id']);
 
 // Secure query with proper joins (students + departments)
 $stmt = $pdo->prepare("
@@ -25,9 +35,9 @@ $stmt = $pdo->prepare("
     JOIN students s ON p.student_id = s.id
     LEFT JOIN departments d ON s.department_id = d.id
     WHERE p.id = ? 
-      AND p.student_id = ?
+      AND p.student_id IN ($slip_ph)
 ");
-$stmt->execute([$project_id, $_SESSION['user_id']]);
+$stmt->execute(array_merge([$project_id], $slip_ids));
 $slip = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$slip || $slip['status'] !== 'approved') {
@@ -119,14 +129,27 @@ if (!$slip || $slip['status'] !== 'approved') {
 
     <div class="content">
         <table class="table table-borderless">
-            <tr>
-                <th width="32%">Student Name:</th>
-                <td><?php echo htmlspecialchars($slip['student_name']); ?></td>
-            </tr>
-            <tr>
-                <th>Matriculation Number:</th>
-                <td><strong><?php echo htmlspecialchars($slip['matric_no']); ?></strong></td>
-            </tr>
+            <?php if (count($slip_members) > 1): ?>
+                <tr>
+                    <th width="32%">Students:</th>
+                    <td>
+                        <?php foreach ($slip_members as $i => $m): ?>
+                            <?php if ($i > 0): ?><br><?php endif; ?>
+                            <?php echo htmlspecialchars($m['name']); ?>
+                            &mdash; <strong><?php echo htmlspecialchars($m['matric_no']); ?></strong>
+                        <?php endforeach; ?>
+                    </td>
+                </tr>
+            <?php else: ?>
+                <tr>
+                    <th width="32%">Student Name:</th>
+                    <td><?php echo htmlspecialchars($slip['student_name']); ?></td>
+                </tr>
+                <tr>
+                    <th>Matriculation Number:</th>
+                    <td><strong><?php echo htmlspecialchars($slip['matric_no']); ?></strong></td>
+                </tr>
+            <?php endif; ?>
             <tr>
                 <th>Department:</th>
                 <td><?php echo htmlspecialchars($slip['department_name'] ?? 'N/A'); ?></td>

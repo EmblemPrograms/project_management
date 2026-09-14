@@ -56,7 +56,7 @@ $total_students = $dept['total_students'] ?? 0;
             </div>
 
             <div class="row g-4">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <a href="view_students.php" class="text-decoration-none">
                         <div class="card text-center h-100 shadow-sm">
                             <div class="card-body py-4">
@@ -67,12 +67,23 @@ $total_students = $dept['total_students'] ?? 0;
                     </a>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <a href="view_projects.php" class="text-decoration-none">
                         <div class="card text-center h-100 shadow-sm">
                             <div class="card-body py-4">
                                 <h5>📂 View Projects</h5>
                                 <p class="text-muted">Pending & Approved Projects</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4">
+                    <a href="view_payments.php" class="text-decoration-none">
+                        <div class="card text-center h-100 shadow-sm">
+                            <div class="card-body py-4">
+                                <h5>&#128179; View Submission List</h5>
+                                <p class="text-muted">Who has paid, in your department</p>
                             </div>
                         </div>
                     </a>

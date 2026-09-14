@@ -345,7 +345,7 @@ foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->f
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NACOS FPE - Student Registration &amp; Login</title>
+    <title>School of Computing - Student Registration &amp; Login</title>
     <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -364,7 +364,7 @@ foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->f
             <div class="col-lg-10">
 
                 <div class="text-center mb-4">
-                    <h1 class="display-5 fw-bold text-success">NACOS FPE Project Repository</h1>
+                    <h1 class="display-5 fw-bold text-success">School of Computing Project Repository</h1>
                     <p class="lead text-muted">ND &amp; HND Student Registration Portal</p>
                 </div>
 
@@ -443,7 +443,7 @@ foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->f
                                     </div>
 
                                     <div class="text-center mt-5">
-                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay &amp; Register HND (&#8358;<?= number_format($FEES['HND']) ?>)</button>
+                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay &amp; Register (&#8358;<?= number_format($FEES['HND']) ?>)</button>
                                     </div>
                                 </form>
                                 <div class="text-center">
@@ -540,7 +540,7 @@ foreach ($pdo->query("SELECT id, name, level FROM departments ORDER BY name")->f
                                     </div>
 
                                     <div class="text-center mt-5">
-                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay &amp; Register ND Pair (&#8358;<?= number_format($FEES['ND']) ?>)</button>
+                                        <button type="submit" class="btn btn-success btn-lg px-5">Pay &amp; Register (&#8358;<?= number_format($FEES['ND']) ?>)</button>
                                     </div>
                                 </form>
                                 <div class="text-center">

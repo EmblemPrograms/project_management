@@ -13,6 +13,13 @@ $department_id = $_SESSION['department_id'];
 $search  = $_GET['search'] ?? '';
 $session = $_GET['session'] ?? '';
 
+// Only sessions that exist in this department, newest first.
+$sess_stmt = $pdo->prepare(
+    "SELECT DISTINCT session FROM students WHERE department_id = ? AND session <> '' ORDER BY session DESC"
+);
+$sess_stmt->execute([$_SESSION['department_id']]);
+$sessions = $sess_stmt->fetchAll(PDO::FETCH_COLUMN);
+
 // Build query with filters
 $query = "
     SELECT s.*, d.name AS department_name 
@@ -72,9 +79,14 @@ $students = $stmt->fetchAll();
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Session</label>
-                    <input type="text" name="session" class="form-control" 
-                           value="<?= htmlspecialchars($session) ?>" 
-                           placeholder="e.g. 2023/2024">
+                    <select name="session" class="form-select">
+                        <option value="">All Sessions</option>
+                        <?php foreach ($sessions as $sess): ?>
+                            <option value="<?= htmlspecialchars($sess) ?>" <?= $session === $sess ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($sess) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-success w-100">Apply Filter</button>

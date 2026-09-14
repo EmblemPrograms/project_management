@@ -22,16 +22,16 @@ function sendVerificationOTP($email, $otp, $name) {
         $mail->addAddress($email, $name);
 
         $mail->isHTML(true);
-        $mail->Subject = 'NACOS FPE CHAPTER - Email Verification OTP';
+        $mail->Subject = 'School of Computing - Email Verification OTP';
 
         $body = "
             <h3>Dear " . htmlspecialchars($name) . ",</h3>
-            <p>Your verification OTP for NACOS Project Register is:</p>
+            <p>Your verification OTP for School of Computing Project Register is:</p>
             <h2 style='color:#28a745; letter-spacing: 8px;'>$otp</h2>
             <p>This OTP will expire in 30 minutes.</p>
             <p>If you did not register, please ignore this email.</p>
             <br>
-            <p>Best regards,<br>NACOS FPE CHAPTER Team</p>
+            <p>Best regards,<br>School of Computing Team</p>
         ";
 
         $mail->Body = $body;

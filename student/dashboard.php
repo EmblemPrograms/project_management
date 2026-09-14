@@ -2,6 +2,7 @@
 // student_dashboard.php
 
 require_once '../includes/config.php';
+require_once '../includes/pair.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     header("Location: register.php");
@@ -9,6 +10,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 }
 
 $user_id = $_SESSION['user_id'];
+
+// An ND pair shares one project, so both halves read the same rows.
+// For an HND student this is just their own id.
+$profile_ids = profile_student_ids($pdo, (int) $user_id);
+$profile_ph  = profile_id_placeholders($profile_ids);
+$partner     = pair_partner($pdo, (int) $user_id);
 
 // Fetch student details with Department Name
 $stmt = $pdo->prepare("
@@ -21,8 +28,8 @@ $stmt->execute([$user_id]);
 $student = $stmt->fetch();
 
 // Fetch student's uploaded projects
-$stmt = $pdo->prepare("SELECT * FROM projects WHERE student_id = ? ORDER BY upload_date DESC");
-$stmt->execute([$user_id]);
+$stmt = $pdo->prepare("SELECT * FROM projects WHERE student_id IN ($profile_ph) ORDER BY upload_date DESC");
+$stmt->execute($profile_ids);
 $projects = $stmt->fetchAll();
 ?>
 
@@ -31,7 +38,7 @@ $projects = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - NACOS FPE Chapter</title>
+    <title>Student Dashboard - School of Computing</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
@@ -90,11 +97,19 @@ $projects = $stmt->fetchAll();
             </div>
 
             <div  >
-             
+
+                <p class="mb-1 text-white text-uppercase" style="letter-spacing:.08em; font-size:.8rem; opacity:.85;">
+                    School of Computing
+                </p>
                 <h2>Welcome back, <?= htmlspecialchars($student['name'] ?? 'Student') ?>! 👋</h2>
                  
                 <p class="mb-1 fs-5">
                     Matric No: <strong><?= htmlspecialchars($student['matric_no'] ?? 'N/A') ?></strong>
+                    <?php if ($partner): ?>
+                        &nbsp;&bull;&nbsp; Partner:
+                        <strong><?= htmlspecialchars($partner['name']) ?></strong>
+                        (<?= htmlspecialchars($partner['matric_no']) ?>)
+                    <?php endif; ?>
                 </p>
                 <p>
                     Department: <strong><?= htmlspecialchars($student['department_name'] ?? 'Not Assigned') ?></strong><br>
@@ -169,10 +184,12 @@ $projects = $stmt->fetchAll();
     </thead>
     <tbody>
         <?php
-        $stmt = $pdo->prepare("SELECT * FROM projects 
-                               WHERE student_id = ? 
-                               ORDER BY uploaded_at DESC");
-        $stmt->execute([$_SESSION['user_id']]);
+        $stmt = $pdo->prepare("SELECT p.*, s.name AS uploaded_by, s.id AS uploader_id
+                               FROM projects p
+                               JOIN students s ON s.id = p.student_id
+                               WHERE p.student_id IN ($profile_ph)
+                               ORDER BY p.uploaded_at DESC");
+        $stmt->execute($profile_ids);
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $downloadBtn = '';
@@ -193,8 +210,16 @@ $projects = $stmt->fetchAll();
                           ($row['status'] === 'rejected' ? 'danger' : 'warning');
             
 
+            $by = '';
+            if ((int) $row['uploader_id'] !== (int) $_SESSION['user_id']) {
+                // Uploaded by the other half of the pair — say so, or it looks
+                // like a project appeared from nowhere.
+                $by = "<br><small class='text-muted'>Uploaded by "
+                    . htmlspecialchars($row['uploaded_by']) . "</small>";
+            }
+
             echo "<tr>
-                    <td>{$row['title']}</td>
+                    <td>{$row['title']}{$by}</td>
                     <td>{$row['supervisor']}</td>
                     <td>
                         <span class='badge bg-{$statusClass}'>

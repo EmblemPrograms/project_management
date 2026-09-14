@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['resend_otp'])) {
         // Clear registration session data
         unset($_SESSION['reg_otp'], $_SESSION['reg_student_id'], $_SESSION['reg_name'], $_SESSION['reg_email']);
 
-        $_SESSION['success'] = "🎉 Registration completed successfully! Welcome to NACOS FPE Chapter.";
+        $_SESSION['success'] = "🎉 Registration completed successfully! Welcome to School of Computing.";
 
         header("Location: dashboard.php");
         exit;
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['resend_otp'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTP Verification - NACOS FPE</title>
+    <title>OTP Verification - School of Computing</title>
     <link rel="shortcut icon" href="https://ik.imagekit.io/emblem/NNL.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>

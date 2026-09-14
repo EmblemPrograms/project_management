@@ -1,0 +1,4 @@
+# Everything here is server-side include material — config, mailers, shared
+# page bodies. None of it is meant to be fetched directly, and a page body
+# requested on its own would run without the role check its wrapper performs.
+Require all denied

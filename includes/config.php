@@ -1,5 +1,5 @@
 <?php
-// config.php - Central Configuration for NACOS FPE CHAPTER Project Register
+// config.php - Central Configuration for School of Computing Project Register
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start([
@@ -159,10 +159,10 @@ define('SMTP_PORT',       $LOCAL['smtp']['port']       ?? 587);
 define('SMTP_USERNAME',   $LOCAL['smtp']['username']   ?? '');
 define('SMTP_PASSWORD',   $LOCAL['smtp']['password']   ?? '');
 define('SMTP_FROM_EMAIL', $LOCAL['smtp']['from_email'] ?? '');
-define('SMTP_FROM_NAME',  $LOCAL['smtp']['from_name']  ?? 'NACOS FPE CHAPTER');
+define('SMTP_FROM_NAME',  $LOCAL['smtp']['from_name']  ?? 'School of Computing');
 
 // System Constants
-define('SYSTEM_NAME', 'NACOS FPE CHAPTER');
+define('SYSTEM_NAME', 'School of Computing');
 define('DEFAULT_SESSION', '2025/2026');
 
 // Helper function

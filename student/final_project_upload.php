@@ -4,6 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 require_once '../includes/config.php';
+require_once '../includes/pair.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['pending_submission'])) {
     header("Location: student_dashboard.php");
@@ -15,6 +16,19 @@ $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // Last line of defence for an ND pair: a double submit, a back-button
+    // repost, or the partner submitting a moment earlier would otherwise
+    // create two projects for one pair.
+    $already = is_paired($pdo, (int) $_SESSION['user_id'])
+        ? pair_live_project($pdo, (int) $_SESSION['user_id'])
+        : null;
+
+    if ($already) {
+        unset($_SESSION['pending_submission']);
+        $error = "This project has already been submitted by "
+               . htmlspecialchars($already['uploaded_by']) . ". Nothing further is needed.";
+    } else {
 
     $stmt = $pdo->prepare("INSERT INTO projects 
         (student_id, title, abstract, supervisor, file_path, status) 
@@ -33,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         unset($_SESSION['pending_submission']);
     } else {
         $error = "Failed to save project to database.";
+    }
     }
 }
 ?>

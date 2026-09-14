@@ -34,18 +34,18 @@ function sendPasswordResetOTP($email, $otp, $name) {
         $mail->addAddress($email, $name);
 
         $mail->isHTML(true);
-        $mail->Subject = 'NACOS FPE CHAPTER - Password Reset Code';
+        $mail->Subject = 'School of Computing - Password Reset Code';
 
         $body = "
             <h3>Dear " . htmlspecialchars($name) . ",</h3>
-            <p>We received a request to reset your NACOS Project Register password.</p>
+            <p>We received a request to reset your School of Computing Project Register password.</p>
             <p>Your reset code is:</p>
             <h2 style='color:#28a745; letter-spacing: 8px;'>$otp</h2>
             <p>This code expires in 30 minutes and can only be used once.</p>
             <p><strong>If you did not request this, ignore this email.</strong>
                Your password stays as it is and no action is needed.</p>
             <br>
-            <p>Best regards,<br>NACOS FPE CHAPTER Team</p>
+            <p>Best regards,<br>School of Computing Team</p>
         ";
 
         $mail->Body = $body;

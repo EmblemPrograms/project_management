@@ -269,7 +269,8 @@ require_once 'includes/config.php';
             <div class="col-lg-7">
                 <span class="badge bg-white text-success rounded-pill mb-3">NACOS FPE | Final Year Projects</span>
                 <h1 class="fw-bold mb-4">
-                    Manage final year project submissions with clarity, accountability, and speed.
+                    School Of Computing<br>
+                    Project Management
                 </h1>
                 <p class="lead text-white-75 mb-5">
                     A polished platform for students, supervisors and department admins to upload, review, approve and track project progress in one place.

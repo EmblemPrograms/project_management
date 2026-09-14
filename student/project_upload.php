@@ -4,6 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 require_once '../includes/config.php';
+require_once '../includes/pair.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     header("Location: login.php");
@@ -12,7 +13,21 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 
 $error = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// An ND pair submits ONE project between them. If the other half has already
+// uploaded, this student has nothing to do — show them what was submitted
+// instead of letting the pair file a second project the department would then
+// have to reconcile. A rejected project does not block a fresh attempt.
+$existing_pair_project = null;
+if (is_paired($pdo, (int) $_SESSION['user_id'])) {
+    $existing_pair_project = pair_live_project($pdo, (int) $_SESSION['user_id']);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $existing_pair_project) {
+    // Re-checked on POST, not just on render: the partner may have submitted
+    // while this form sat open.
+    $error = "Your project has already been submitted by "
+           . htmlspecialchars($existing_pair_project['uploaded_by']) . ".";
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $title      = trim($_POST['title'] ?? '');
     $abstract   = trim($_POST['abstract'] ?? '');
@@ -81,6 +96,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
 
+            <?php if ($existing_pair_project): ?>
+                <!-- The pair has already submitted. Don't show a form the
+                     student would fill in only to have it rejected. -->
+                <div class="alert alert-success">
+                    <h5 class="alert-heading">Your project is already submitted</h5>
+                    <p class="mb-2">
+                        <strong><?= htmlspecialchars($existing_pair_project['uploaded_by']) ?></strong>
+                        (<?= htmlspecialchars($existing_pair_project['uploaded_by_matric']) ?>)
+                        submitted it on behalf of your pair. You do not need to upload it again.
+                    </p>
+                    <hr>
+                    <p class="mb-1"><strong>Title:</strong>
+                        <?= htmlspecialchars($existing_pair_project['title']) ?></p>
+                    <p class="mb-1"><strong>Supervisor:</strong>
+                        <?= htmlspecialchars($existing_pair_project['supervisor'] ?? '') ?></p>
+                    <p class="mb-0"><strong>Status:</strong>
+                        <span class="badge bg-<?= $existing_pair_project['status'] === 'approved' ? 'success' : 'warning' ?>">
+                            <?= htmlspecialchars(ucfirst($existing_pair_project['status'])) ?>
+                        </span>
+                    </p>
+                </div>
+                <a href="dashboard.php" class="btn btn-success w-100">Back to Dashboard</a>
+
+            <?php else: ?>
+
             <form method="POST" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Project Title</label>
@@ -101,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button type="submit" class="btn btn-success btn-lg w-100">Continue</button>
                 <a href="dashboard.php" class="btn btn-secondary w-100 mt-2">Back to Dashboard</a>
             </form>
+            <?php endif; ?>
         </div>
     </div>
 </div>

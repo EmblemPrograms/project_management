@@ -9,11 +9,17 @@ if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] !== 'grand_admin') 
 }
 
 $department_id = $_GET['department_id'] ?? '';
+$session       = trim($_GET['session'] ?? '');
 $search = trim($_GET['search'] ?? '');
 
 // Fetch departments for filter dropdown
 $stmt = $pdo->query("SELECT * FROM departments ORDER BY name");
 $departments = $stmt->fetchAll();
+
+// Only sessions that actually exist, newest first.
+$sessions = $pdo->query(
+    "SELECT DISTINCT session FROM students WHERE session <> '' ORDER BY session DESC"
+)->fetchAll(PDO::FETCH_COLUMN);
 
 // Build query for students
 $sql = "SELECT s.* FROM students s WHERE 1=1";
@@ -22,6 +28,11 @@ $params = [];
 if ($department_id) {
     $sql .= " AND s.department_id = ?";
     $params[] = $department_id;
+}
+
+if ($session) {
+    $sql .= " AND s.session = ?";
+    $params[] = $session;
 }
 
 if ($search) {
@@ -56,17 +67,27 @@ $students = $stmt->fetchAll();
     <div class="card shadow mb-4">
         <div class="card-body">
             <form method="GET" class="row g-3">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <input type="text" name="search" class="form-control" 
                            placeholder="Search by name or matric number" 
                            value="<?= htmlspecialchars($search) ?>">
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <select name="department_id" class="form-select">
                         <option value="">All Departments</option>
                         <?php foreach ($departments as $dept): ?>
                             <option value="<?= $dept['id'] ?>" <?= $department_id == $dept['id'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($dept['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="session" class="form-select">
+                        <option value="">All Sessions</option>
+                        <?php foreach ($sessions as $sess): ?>
+                            <option value="<?= htmlspecialchars($sess) ?>" <?= $session === $sess ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($sess) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -89,6 +110,7 @@ $students = $stmt->fetchAll();
                             <tr>
                                 <th>Matric No</th>
                                 <th>Full Name</th>
+                                <th>Session</th>
                                 <th>Level</th>
                                 <th>Passport</th>
                             </tr>
@@ -98,6 +120,7 @@ $students = $stmt->fetchAll();
                             <tr>
                                 <td><strong><?= htmlspecialchars($s['matric_no']) ?></strong></td>
                                 <td><?= htmlspecialchars($s['name']) ?></td>
+                                <td><?= htmlspecialchars($s['session'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($s['level']) ?></td>
                                 <td>
                                     <?php if (!empty($s['passport'])): ?>
