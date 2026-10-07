@@ -121,12 +121,11 @@ $projects = $stmt->fetchAll();
                             <th>Project Title</th>
                             <th>Session</th>
                             <th>Uploaded</th>
-                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($projects)): ?>
-                            <tr><td colspan="7" class="text-center py-4">No projects found.</td></tr>
+                            <tr><td colspan="6" class="text-center py-4">No projects found.</td></tr>
                         <?php else: ?>
                             <?php $sn = 0; ?>
                             <?php foreach ($projects as $row): $sn++; ?>
@@ -137,29 +136,7 @@ $projects = $stmt->fetchAll();
                                     <td><?= htmlspecialchars($row['title']) ?></td>
                                     <td><?= htmlspecialchars($row['session'] ?? '') ?></td>
                                     <td><?= $row['uploaded_at'] ?></td>
-                                   <td>
-    <?php if ($row['status'] == 'pending'): ?>
-        <!-- View Document Button -->
-        <a href="<?= htmlspecialchars(project_url($row['file_path'])) ?>" 
-           class="btn btn-info btn-sm me-1" target="_blank">
-            <i class="fas fa-eye"></i> View PDF
-        </a>
-        
-        <a href="approve_project.php?id=<?= $row['id'] ?>" 
-           class="btn btn-success btn-sm me-1"
-           onclick="return confirm('Approve this project?')">Approve</a>
-        
-        <a href="reject_project.php?id=<?= $row['id'] ?>" 
-           class="btn btn-danger btn-sm"
-           onclick="return confirm('Reject this project?')">Reject</a>
-    <?php elseif ($row['status'] == 'approved'): ?>
-        <a href="<?= htmlspecialchars(project_url($row['file_path'])) ?>" 
-           class="btn btn-success btn-sm" download>
-            <i class="fas fa-download"></i> Download
-        </a>
-    <?php endif; ?>
-</td>
-                                </tr>
+</tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>

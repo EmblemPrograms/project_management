@@ -7,7 +7,7 @@ require_once '../includes/config.php';
 require_once '../includes/pair.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['pending_submission'])) {
-    header("Location: student_dashboard.php");
+    header("Location: dashboard.php");
     exit;
 }
 
@@ -30,9 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                . htmlspecialchars($already['uploaded_by']) . ". Nothing further is needed.";
     } else {
 
+    // Uploading IS the approval — there is no separate review step, so the
+    // project is approved the moment it lands and approved_at is stamped with
+    // it. The approval slip is therefore available straight away.
     $stmt = $pdo->prepare("INSERT INTO projects 
-        (student_id, title, abstract, supervisor, file_path, status) 
-        VALUES (?, ?, ?, ?, ?, 'pending')");
+        (student_id, title, abstract, supervisor, file_path, status, approved_at) 
+        VALUES (?, ?, ?, ?, ?, 'approved', NOW())");
 
     $result = $stmt->execute([
         $_SESSION['user_id'],
@@ -43,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ]);
 
     if ($result) {
-        $success = "Project submitted successfully! Waiting for admin approval.";
+        $success = "Project submitted and approved. You can print your approval slip now.";
         unset($_SESSION['pending_submission']);
     } else {
         $error = "Failed to save project to database.";
@@ -80,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h5>✅ Success!</h5>
                     <p class="lead"><?= htmlspecialchars($success) ?></p>
                 </div>
-                <a href="student_dashboard.php" class="btn btn-success btn-lg">Go to Dashboard</a>
+                <a href="dashboard.php" class="btn btn-success btn-lg">Go to Dashboard</a>
 
             <?php else: ?>
                 <?php if ($error): ?>

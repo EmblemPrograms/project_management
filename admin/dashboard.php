@@ -305,13 +305,12 @@ $projects = $stmt->fetchAll();
                                         <th>Project Title</th>
                                         <th>Session</th>
                                         <th>Uploaded</th>
-                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php if (empty($projects)): ?>
                                         <tr>
-                                            <td colspan="7" class="text-center py-4">No projects found.</td>
+                                            <td colspan="6" class="text-center py-4">No projects found.</td>
                                         </tr>
                                     <?php else: ?>
                                         <?php $sn = 0; ?>
@@ -323,22 +322,6 @@ $projects = $stmt->fetchAll();
                                                 <td><?= htmlspecialchars($row['title']) ?></td>
                                                 <td><?= htmlspecialchars($row['session'] ?? '') ?></td>
                                                 <td><?= $row['uploaded_at'] ?></td>
-                                                <td>
-                                                    <?php if (!empty($row['file_path'])): ?>
-                                                        <a href="<?= htmlspecialchars(project_url($row['file_path'])) ?>"
-                                                           class="btn btn-info btn-sm me-1" target="_blank">
-                                                            <i class="fas fa-eye"></i> View PDF
-                                                        </a>
-                                                        <?php if ($row['status'] === 'approved'): ?>
-                                                            <a href="<?= htmlspecialchars(project_url($row['file_path'])) ?>"
-                                                               class="btn btn-success btn-sm" download>
-                                                                <i class="fas fa-download"></i> Download
-                                                            </a>
-                                                        <?php endif; ?>
-                                                    <?php else: ?>
-                                                        <span class="text-muted small">&mdash;</span>
-                                                    <?php endif; ?>
-                                                </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
